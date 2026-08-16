@@ -8,15 +8,6 @@ const nextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/admin/connexion",
-        permanent: false,
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;
