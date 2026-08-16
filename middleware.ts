@@ -34,10 +34,26 @@ export async function middleware(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
   const isLoginRoute = request.nextUrl.pathname === "/admin/connexion";
 
-  if (isAdminRoute && !isLoginRoute && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/connexion";
-    return NextResponse.redirect(url);
+  if (isAdminRoute && !isLoginRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/connexion";
+      return NextResponse.redirect(url);
+    }
+
+    // Authentifié ne suffit pas : il faut aussi être dans l'équipe.
+    const { data: membre } = await supabase
+      .from("admins")
+      .select("email")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (!membre) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/connexion";
+      url.searchParams.set("erreur", "non_autorise");
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

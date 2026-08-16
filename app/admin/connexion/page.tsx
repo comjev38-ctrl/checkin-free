@@ -20,6 +20,11 @@ function FormulaireConnexion() {
         "Ce lien a expiré ou a déjà été utilisé. Redemande un nouveau lien ci-dessous."
       );
     }
+    if (searchParams.get("erreur") === "non_autorise") {
+      setErreur(
+        "Ton compte n'est pas autorisé à accéder à l'espace admin. Demande à un membre existant de t'ajouter depuis la page Membres."
+      );
+    }
   }, [searchParams]);
 
   async function connexionMotDePasse(e: React.FormEvent) {
