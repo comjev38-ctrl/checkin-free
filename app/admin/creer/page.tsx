@@ -62,7 +62,7 @@ export default function PageCreerEvenement() {
   }
 
   return (
-    <main className="min-h-screen bg-paper px-6 py-10">
+    <main className="px-6 py-10">
       <div className="mx-auto max-w-xl">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
           Nouvel événement

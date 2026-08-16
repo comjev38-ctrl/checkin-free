@@ -16,7 +16,7 @@ export default async function PageEvenement({
     .from("events")
     .select("*")
     .eq("slug", params.slug)
-    .eq("statut", "publie")
+    .in("statut", ["publie", "clos"])
     .single();
 
   if (!event) notFound();
@@ -85,7 +85,11 @@ export default async function PageEvenement({
         )}
 
         <div className="mt-10 border-t border-line pt-8">
-          {complet ? (
+          {event.statut === "clos" ? (
+            <div className="rounded-lg border border-line bg-stone/5 px-5 py-4 text-stone">
+              Les inscriptions à cet événement sont closes.
+            </div>
+          ) : complet ? (
             <div className="rounded-lg border border-rose/30 bg-rose/5 px-5 py-4 text-rose">
               Cet événement est complet. Les inscriptions sont closes.
             </div>

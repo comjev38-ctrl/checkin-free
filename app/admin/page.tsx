@@ -13,11 +13,10 @@ export default async function TableauDeBordAdmin() {
   const { data: events } = await supabase
     .from("events")
     .select("*, tickets(count)")
-    .eq("admin_id", user!.id)
     .order("date_debut", { ascending: true });
 
   return (
-    <main className="min-h-screen bg-paper px-6 py-10">
+    <main className="px-6 py-10">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between">
           <div>
@@ -70,6 +69,12 @@ export default async function TableauDeBordAdmin() {
                     className="text-emerald hover:underline"
                   >
                     Scanner
+                  </Link>
+                  <Link
+                    href={`/admin/modifier/${event.id}`}
+                    className="text-stone hover:underline"
+                  >
+                    Modifier
                   </Link>
                   <Link
                     href={`/evenement/${event.slug}`}
