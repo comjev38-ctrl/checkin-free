@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import BoutonSupprimerEvenement from "./bouton-supprimer-evenement";
 
 export const revalidate = 0;
 
@@ -76,6 +77,11 @@ export default async function TableauDeBordAdmin() {
                   >
                     Voir la page
                   </Link>
+                  <BoutonSupprimerEvenement
+                    eventId={event.id}
+                    titre={event.titre}
+                    nbBillets={event.tickets?.[0]?.count ?? 0}
+                  />
                 </div>
               </div>
             ))
