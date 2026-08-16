@@ -2,11 +2,11 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { eventId, nom, email } = await req.json();
+  const { eventId, prenom, nom, email } = await req.json();
 
-  if (!eventId || !nom || !email) {
+  if (!eventId || !prenom || !nom || !email) {
     return NextResponse.json(
-      { message: "Nom, email et événement sont requis." },
+      { message: "Prénom, nom, email et événement sont requis." },
       { status: 400 }
     );
   }
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
   const { data: ticket, error: ticketError } = await supabase
     .from("tickets")
-    .insert({ event_id: eventId, nom, email })
+    .insert({ event_id: eventId, prenom, nom, email })
     .select("id")
     .single();
 

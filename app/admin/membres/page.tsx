@@ -35,10 +35,13 @@ export default async function PageMembres() {
             membres.map((m) => (
               <div
                 key={m.email}
-                className="flex items-center justify-between py-3"
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3"
               >
                 <span className="text-ink">
-                  {m.email}
+                  {[m.prenom, m.nom].filter(Boolean).join(" ") || m.email}
+                  {[m.prenom, m.nom].filter(Boolean).length > 0 && (
+                    <span className="ml-2 text-sm text-stone">{m.email}</span>
+                  )}
                   {m.email === user?.email && (
                     <span className="ml-2 font-mono text-xs text-stone">
                       (toi)

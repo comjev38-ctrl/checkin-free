@@ -16,9 +16,20 @@ export default async function LayoutAdmin({
     return <>{children}</>;
   }
 
+  const { data: monProfil } = await supabase
+    .from("admins")
+    .select("prenom, nom")
+    .eq("email", user.email)
+    .maybeSingle();
+
+  const nomAffiche =
+    [monProfil?.prenom, monProfil?.nom].filter(Boolean).join(" ") ||
+    user.email ||
+    "";
+
   return (
     <div className="min-h-screen bg-paper">
-      <NavAdmin email={user.email ?? ""} />
+      <NavAdmin nomAffiche={nomAffiche} />
       {children}
     </div>
   );

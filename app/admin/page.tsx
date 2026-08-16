@@ -18,7 +18,7 @@ export default async function TableauDeBordAdmin() {
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
               Espace organisateur
@@ -29,7 +29,7 @@ export default async function TableauDeBordAdmin() {
           </div>
           <Link
             href="/admin/creer"
-            className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink/90"
+            className="inline-block rounded-md bg-ink px-4 py-2 text-center text-sm font-medium text-paper hover:bg-ink/90"
           >
             + Nouvel événement
           </Link>
@@ -40,7 +40,7 @@ export default async function TableauDeBordAdmin() {
             events.map((event: any) => (
               <div
                 key={event.id}
-                className="flex items-center justify-between py-4"
+                className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="font-display text-lg text-ink">
@@ -63,7 +63,13 @@ export default async function TableauDeBordAdmin() {
                     · {event.tickets?.[0]?.count ?? 0} billet(s)
                   </p>
                 </div>
-                <div className="flex gap-3 font-mono text-xs uppercase tracking-wide">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 font-mono text-xs uppercase tracking-wide">
+                  <Link
+                    href={`/admin/stats/${event.id}`}
+                    className="text-emerald hover:underline"
+                  >
+                    Stats
+                  </Link>
                   <Link
                     href={`/admin/scan?event=${event.id}`}
                     className="text-emerald hover:underline"

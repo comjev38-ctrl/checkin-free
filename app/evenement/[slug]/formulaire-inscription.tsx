@@ -10,6 +10,7 @@ export default function FormulaireInscription({
   slug: string;
 }) {
   const router = useRouter();
+  const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
@@ -24,7 +25,7 @@ export default function FormulaireInscription({
       const res = await fetch("/api/inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, nom, email }),
+        body: JSON.stringify({ eventId, prenom, nom, email }),
       });
 
       if (!res.ok) {
@@ -44,18 +45,33 @@ export default function FormulaireInscription({
     <form onSubmit={reserverLaPlace} className="space-y-5">
       <h2 className="font-display text-xl text-ink">Réserver ma place</h2>
 
-      <div>
-        <label htmlFor="nom" className="block font-mono text-xs uppercase text-stone">
-          Nom et prénom
-        </label>
-        <input
-          id="nom"
-          required
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-          placeholder="Jeanne Dupont"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="prenom" className="block font-mono text-xs uppercase text-stone">
+            Prénom
+          </label>
+          <input
+            id="prenom"
+            required
+            value={prenom}
+            onChange={(e) => setPrenom(e.target.value)}
+            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+            placeholder="Jeanne"
+          />
+        </div>
+        <div>
+          <label htmlFor="nom" className="block font-mono text-xs uppercase text-stone">
+            Nom
+          </label>
+          <input
+            id="nom"
+            required
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+            placeholder="Dupont"
+          />
+        </div>
       </div>
 
       <div>

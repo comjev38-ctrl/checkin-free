@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const supabase = createServiceClient();
   const { data: ticket } = await supabase
     .from("tickets")
-    .select("nom, email, code, event:events(titre, date_debut, lieu)")
+    .select("prenom, nom, email, code, event:events(titre, date_debut, lieu)")
     .eq("id", ticketId)
     .single();
 
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
   }
 
   const event: any = Array.isArray(ticket.event) ? ticket.event[0] : ticket.event;
+  const nomComplet = [ticket.prenom, ticket.nom].filter(Boolean).join(" ");
   const qrDataUrl = await genererQrDataUrl(ticket.code);
   const qrBase64 = qrDataUrl.split(",")[1];
 
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
         <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">Billet confirmé</p>
         <h1 style="font-size:22px; margin:4px 0 16px;">${event.titre}</h1>
         <p>${dateEvenement}${event.lieu ? ` — ${event.lieu}` : ""}</p>
-        <p>Titulaire : <strong>${ticket.nom}</strong></p>
+        <p>Titulaire : <strong>${nomComplet}</strong></p>
         <p>Code billet : <strong>${ticket.code}</strong></p>
         <p>Ton QR code est en pièce jointe. Présente-le à l'entrée.</p>
       </div>

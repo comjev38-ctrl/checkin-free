@@ -13,7 +13,7 @@ export default async function PageBillet({
 
   const { data: ticket } = await supabase
     .from("tickets")
-    .select("id, nom, code, statut, event:events(titre, date_debut, lieu)")
+    .select("id, prenom, nom, code, statut, event:events(titre, date_debut, lieu)")
     .eq("id", params.id)
     .single();
 
@@ -38,11 +38,11 @@ export default async function PageBillet({
 
         <div className="ticket-stub flex overflow-hidden rounded-xl border border-line bg-white shadow-sm">
           {/* Souche : informations */}
-          <div className="ticket-notch-right relative flex-1 p-6">
+          <div className="ticket-notch-right relative flex-1 p-4 sm:p-6">
             <p className="font-mono text-[10px] uppercase tracking-widest text-stone">
               CheckIn Free
             </p>
-            <h1 className="mt-2 font-display text-2xl italic leading-snug text-ink">
+            <h1 className="mt-2 font-display text-xl italic leading-snug text-ink sm:text-2xl">
               {event.titre}
             </h1>
             <div className="mt-4 space-y-1 text-sm text-ink/80">
@@ -53,7 +53,9 @@ export default async function PageBillet({
               <p className="font-mono text-[10px] uppercase text-stone">
                 Titulaire
               </p>
-              <p className="text-ink">{ticket.nom}</p>
+              <p className="text-ink">
+                {[ticket.prenom, ticket.nom].filter(Boolean).join(" ")}
+              </p>
             </div>
           </div>
 
@@ -61,9 +63,9 @@ export default async function PageBillet({
           <div className="ticket-perforation my-4" />
 
           {/* Coupon : QR code */}
-          <div className="flex w-40 shrink-0 flex-col items-center justify-center gap-3 p-4">
+          <div className="flex w-28 shrink-0 flex-col items-center justify-center gap-3 p-3 sm:w-40 sm:p-4">
             <img src={qr} alt="QR code du billet" className="w-full" />
-            <p className="font-mono text-[11px] tracking-widest text-ink">
+            <p className="break-all text-center font-mono text-[10px] tracking-widest text-ink sm:text-[11px]">
               {ticket.code}
             </p>
           </div>

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import BoutonDeconnexion from "./bouton-deconnexion";
 
-export default function NavAdmin({ email }: { email: string }) {
+export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
   return (
     <header className="border-b border-line bg-white">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-        <nav className="flex items-center gap-5 font-mono text-xs uppercase tracking-wide">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs uppercase tracking-wide">
           <Link href="/admin" className="text-ink hover:underline">
             Mes événements
           </Link>
@@ -17,7 +17,7 @@ export default function NavAdmin({ email }: { email: string }) {
           </Link>
         </nav>
         <div className="flex items-center gap-4 font-mono text-xs">
-          <span className="hidden text-stone sm:inline">{email}</span>
+          <span className="hidden text-stone md:inline">{nomAffiche}</span>
           <BoutonDeconnexion />
         </div>
       </div>

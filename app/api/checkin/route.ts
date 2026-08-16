@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   const { data: ticket } = await supabase
     .from("tickets")
-    .select("id, nom, statut, event_id")
+    .select("id, prenom, nom, statut, event_id")
     .eq("event_id", eventId)
     .eq("code", code)
     .maybeSingle();
@@ -30,10 +30,12 @@ export async function POST(req: Request) {
     });
   }
 
+  const nomComplet = [ticket.prenom, ticket.nom].filter(Boolean).join(" ");
+
   if (ticket.statut === "annule") {
     return NextResponse.json({
       statut: "invalide",
-      nom: ticket.nom,
+      nom: nomComplet,
       message: "Ce billet a été annulé.",
     });
   }
@@ -41,7 +43,7 @@ export async function POST(req: Request) {
   if (ticket.statut === "utilise") {
     return NextResponse.json({
       statut: "deja_utilise",
-      nom: ticket.nom,
+      nom: nomComplet,
       message: "Ce billet a déjà servi pour un contrôle d'accès.",
     });
   }
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     statut: "ok",
-    nom: ticket.nom,
+    nom: nomComplet,
     message: "Bienvenue !",
   });
 }
