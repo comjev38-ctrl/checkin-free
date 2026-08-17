@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!ticket) {
     return NextResponse.json({
       statut: "invalide",
-      message: "Ce code ne correspond à aucun billet de cet événement.",
+      message: "Ce code ne correspond à aucun billet de cette séance.",
     });
   }
 

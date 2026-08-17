@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uploaderImageEvenement } from "@/lib/stockage";
+import { calculerProchaineOccurrence } from "@/lib/recurrence";
 
 function creerSlug(titre: string) {
   return titre
@@ -14,12 +15,25 @@ function creerSlug(titre: string) {
     .replace(/(^-|-$)/g, "");
 }
 
+const JOURS_SEMAINE = [
+  { valeur: 1, label: "Lundi" },
+  { valeur: 2, label: "Mardi" },
+  { valeur: 3, label: "Mercredi" },
+  { valeur: 4, label: "Jeudi" },
+  { valeur: 5, label: "Vendredi" },
+  { valeur: 6, label: "Samedi" },
+  { valeur: 7, label: "Dimanche" },
+];
+
 export default function PageCreerEvenement() {
   const router = useRouter();
+  const [type, setType] = useState<"ponctuel" | "recurrent">("ponctuel");
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
   const [lieu, setLieu] = useState("");
   const [dateDebut, setDateDebut] = useState("");
+  const [jourSemaine, setJourSemaine] = useState(4); // jeudi par défaut
+  const [heureDebut, setHeureDebut] = useState("19:00");
   const [capacite, setCapacite] = useState("");
   const [logoFichier, setLogoFichier] = useState<File | null>(null);
   const [logoApercu, setLogoApercu] = useState<string | null>(null);
@@ -56,18 +70,36 @@ export default function PageCreerEvenement() {
           : null,
       ]);
 
-      const { error } = await supabase.from("events").insert({
+      const donneesCommunes = {
         admin_id: user!.id,
         titre,
         slug: creerSlug(titre),
         description,
         lieu,
-        date_debut: dateDebut,
         capacite_max: capacite ? Number(capacite) : null,
         statut,
         logo_url: logoUrl,
         image_url: banniereUrl,
-      });
+      };
+
+      const { error } =
+        type === "recurrent"
+          ? await supabase.from("events").insert({
+              ...donneesCommunes,
+              recurrence: "hebdomadaire",
+              jour_semaine: jourSemaine,
+              heure_debut: heureDebut,
+              // Valeur informative seulement : la vraie date affichée
+              // est recalculée à chaque visite via jour_semaine/heure_debut.
+              date_debut: calculerProchaineOccurrence(
+                jourSemaine,
+                heureDebut
+              ).toISOString(),
+            })
+          : await supabase.from("events").insert({
+              ...donneesCommunes,
+              date_debut: dateDebut,
+            });
 
       if (error) throw error;
       router.push("/admin");
@@ -92,6 +124,39 @@ export default function PageCreerEvenement() {
         </h1>
 
         <form className="mt-8 space-y-5">
+          <div>
+            <label className="block font-mono text-xs uppercase text-stone">
+              Type d&apos;événement
+            </label>
+            <div className="mt-1 flex gap-1 rounded-md bg-line/50 p-1 font-mono text-xs uppercase">
+              <button
+                type="button"
+                onClick={() => setType("ponctuel")}
+                className={`flex-1 rounded px-3 py-2 ${
+                  type === "ponctuel" ? "bg-white text-ink shadow-sm" : "text-stone"
+                }`}
+              >
+                Ponctuel
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("recurrent")}
+                className={`flex-1 rounded px-3 py-2 ${
+                  type === "recurrent" ? "bg-white text-ink shadow-sm" : "text-stone"
+                }`}
+              >
+                Récurrent (hebdomadaire)
+              </button>
+            </div>
+            {type === "recurrent" && (
+              <p className="mt-2 text-xs text-stone">
+                Une nouvelle séance (et donc de nouveaux billets) sera créée
+                automatiquement chaque semaine, à date fixe. L&apos;historique
+                des séances passées reste consultable dans l&apos;admin.
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="block font-mono text-xs uppercase text-stone">Titre</label>
             <input
@@ -118,29 +183,79 @@ export default function PageCreerEvenement() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block font-mono text-xs uppercase text-stone">Date et heure</label>
-              <input
-                type="datetime-local"
-                required
-                value={dateDebut}
-                onChange={(e) => setDateDebut(e.target.value)}
-                className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-              />
+          {type === "ponctuel" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Date et heure
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={dateDebut}
+                  onChange={(e) => setDateDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Capacité max
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={capacite}
+                  onChange={(e) => setCapacite(e.target.value)}
+                  placeholder="Illimitée"
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block font-mono text-xs uppercase text-stone">Capacité max</label>
-              <input
-                type="number"
-                min={1}
-                value={capacite}
-                onChange={(e) => setCapacite(e.target.value)}
-                placeholder="Illimitée"
-                className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-              />
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Jour
+                </label>
+                <select
+                  value={jourSemaine}
+                  onChange={(e) => setJourSemaine(Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                >
+                  {JOURS_SEMAINE.map((j) => (
+                    <option key={j.valeur} value={j.valeur}>
+                      {j.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Heure
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={heureDebut}
+                  onChange={(e) => setHeureDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Capacité / séance
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={capacite}
+                  onChange={(e) => setCapacite(e.target.value)}
+                  placeholder="Illimitée"
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block font-mono text-xs uppercase text-stone">Lieu</label>

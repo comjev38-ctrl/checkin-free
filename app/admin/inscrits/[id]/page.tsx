@@ -14,11 +14,20 @@ export default async function PageInscrits({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, titre, date_debut")
+    .select("id, titre, date_debut, parent_event_id")
     .eq("id", params.id)
     .single();
 
   if (!event) notFound();
+
+  const estUneSeance = !!event.parent_event_id;
+  const libelleDate = new Date(event.date_debut).toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const libelle = estUneSeance ? `${event.titre} — semaine du ${libelleDate}` : event.titre;
 
   const { data: tickets } = await supabase
     .from("tickets")
@@ -41,8 +50,11 @@ export default async function PageInscrits({
         <h1 className="mt-1 font-display text-3xl italic text-ink">
           {event.titre}
         </h1>
+        {estUneSeance && (
+          <p className="mt-1 text-sm capitalize text-stone">Semaine du {libelleDate}</p>
+        )}
 
-        <TableauInscrits eventTitre={event.titre} tickets={tickets ?? []} />
+        <TableauInscrits eventTitre={libelle} tickets={tickets ?? []} />
       </div>
     </main>
   );

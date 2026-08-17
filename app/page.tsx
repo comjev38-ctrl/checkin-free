@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
+import { calculerProchaineOccurrence } from "@/lib/recurrence";
 
 export const revalidate = 0;
 
@@ -11,13 +12,18 @@ export default async function PageAccueil() {
     .from("events")
     .select("*, tickets(count)")
     .in("statut", ["publie", "clos"])
+    .is("parent_event_id", null)
     .order("date_debut", { ascending: true });
 
   const maintenant = new Date();
   const evenementsAVenir =
-    events?.filter((e) => new Date(e.date_debut) >= maintenant) ?? [];
+    events?.filter(
+      (e) => e.recurrence === "hebdomadaire" || new Date(e.date_debut) >= maintenant
+    ) ?? [];
   const evenementsPasses =
-    events?.filter((e) => new Date(e.date_debut) < maintenant) ?? [];
+    events?.filter(
+      (e) => e.recurrence !== "hebdomadaire" && new Date(e.date_debut) < maintenant
+    ) ?? [];
 
   return (
     <main className="min-h-screen bg-paper">
@@ -84,13 +90,30 @@ export default async function PageAccueil() {
 }
 
 function CarteEvenement({ event }: { event: any }) {
-  const date = new Date(event.date_debut).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const JOURS = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+
+  const date =
+    event.recurrence === "hebdomadaire"
+      ? (() => {
+          const prochaine = calculerProchaineOccurrence(
+            event.jour_semaine,
+            event.heure_debut
+          );
+          return `Tous les ${JOURS[event.jour_semaine]}, ${event.heure_debut?.slice(
+            0,
+            5
+          )} · prochaine séance le ${prochaine.toLocaleDateString("fr-FR", {
+            day: "numeric",
+            month: "long",
+          })}`;
+        })()
+      : new Date(event.date_debut).toLocaleString("fr-FR", {
+          weekday: "short",
+          day: "numeric",
+          month: "long",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
   return (
     <Link

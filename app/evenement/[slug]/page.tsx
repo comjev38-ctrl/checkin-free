@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import FormulaireInscription from "./formulaire-inscription";
+import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 
 export const revalidate = 0;
 
@@ -13,14 +14,28 @@ export default async function PageEvenement({
 }) {
   const supabase = createClient();
 
-  const { data: event } = await supabase
+  const { data: brut } = await supabase
     .from("events")
     .select("*")
     .eq("slug", params.slug)
     .in("statut", ["publie", "clos"])
     .single();
 
-  if (!event) notFound();
+  if (!brut) notFound();
+
+  // Modèle récurrent (ex: repas chaud hebdomadaire) : on résout ou
+  // crée la séance de la semaine en cours, et c'est elle qu'on
+  // affiche — le lien public reste toujours le même d'une semaine
+  // à l'autre.
+  let event = brut;
+  if (brut.recurrence === "hebdomadaire" && !brut.parent_event_id) {
+    try {
+      event = await obtenirOuCreerOccurrence(brut);
+    } catch (err) {
+      console.error("Résolution de séance récurrente échouée :", err);
+      notFound();
+    }
+  }
 
   const { count: placesReservees } = await supabase
     .from("tickets")
@@ -79,7 +94,11 @@ export default async function PageEvenement({
 
       <div className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
-          {event.statut === "publie" ? "Inscription ouverte" : ""}
+          {event.parent_event_id
+            ? "Rendez-vous hebdomadaire · cette semaine"
+            : event.statut === "publie"
+            ? "Inscription ouverte"
+            : ""}
         </p>
         <h1 className="mt-3 font-display text-4xl italic text-ink sm:text-5xl">
           {event.titre}

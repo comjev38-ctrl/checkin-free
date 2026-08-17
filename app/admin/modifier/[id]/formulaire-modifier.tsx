@@ -16,7 +16,21 @@ type Event = {
   statut: "brouillon" | "publie" | "clos";
   logo_url: string | null;
   image_url: string | null;
+  parent_event_id: string | null;
+  recurrence: "hebdomadaire" | null;
+  jour_semaine: number | null;
+  heure_debut: string | null;
 };
+
+const JOURS_SEMAINE = [
+  { valeur: 1, label: "Lundi" },
+  { valeur: 2, label: "Mardi" },
+  { valeur: 3, label: "Mercredi" },
+  { valeur: 4, label: "Jeudi" },
+  { valeur: 5, label: "Vendredi" },
+  { valeur: 6, label: "Samedi" },
+  { valeur: 7, label: "Dimanche" },
+];
 
 function versDatetimeLocal(iso: string) {
   const d = new Date(iso);
@@ -71,10 +85,19 @@ function ChampImage({
 
 export default function FormulaireModifierEvenement({ event }: { event: Event }) {
   const router = useRouter();
+  const estUneSeance = !!event.parent_event_id;
+
+  const [type, setType] = useState<"ponctuel" | "recurrent">(
+    event.recurrence === "hebdomadaire" ? "recurrent" : "ponctuel"
+  );
   const [titre, setTitre] = useState(event.titre);
   const [description, setDescription] = useState(event.description ?? "");
   const [lieu, setLieu] = useState(event.lieu ?? "");
   const [dateDebut, setDateDebut] = useState(versDatetimeLocal(event.date_debut));
+  const [jourSemaine, setJourSemaine] = useState(event.jour_semaine ?? 4);
+  const [heureDebut, setHeureDebut] = useState(
+    event.heure_debut?.slice(0, 5) ?? "19:00"
+  );
   const [capacite, setCapacite] = useState(
     event.capacite_max != null ? String(event.capacite_max) : ""
   );
@@ -99,18 +122,34 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           : null,
       ]);
 
+      const donneesCommunes = {
+        titre,
+        description,
+        lieu,
+        capacite_max: capacite ? Number(capacite) : null,
+        statut,
+        ...(logoUrl ? { logo_url: logoUrl } : {}),
+        ...(banniereUrl ? { image_url: banniereUrl } : {}),
+      };
+
+      const donneesRythme = estUneSeance
+        ? {} // une séance individuelle ne change pas de rythme
+        : type === "recurrent"
+        ? {
+            recurrence: "hebdomadaire" as const,
+            jour_semaine: jourSemaine,
+            heure_debut: heureDebut,
+          }
+        : {
+            recurrence: null,
+            jour_semaine: null,
+            heure_debut: null,
+            date_debut: dateDebut,
+          };
+
       const { error } = await supabase
         .from("events")
-        .update({
-          titre,
-          description,
-          lieu,
-          date_debut: dateDebut,
-          capacite_max: capacite ? Number(capacite) : null,
-          statut,
-          ...(logoUrl ? { logo_url: logoUrl } : {}),
-          ...(banniereUrl ? { image_url: banniereUrl } : {}),
-        })
+        .update({ ...donneesCommunes, ...donneesRythme })
         .eq("id", event.id);
 
       if (error) throw error;
@@ -124,6 +163,13 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
 
   return (
     <form onSubmit={enregistrer} className="mt-8 space-y-5">
+      {estUneSeance && (
+        <div className="rounded-md border border-line bg-white px-4 py-3 text-sm text-stone">
+          Ceci est une séance individuelle d&apos;un événement récurrent. Le
+          rythme (jour/heure) se modifie depuis l&apos;événement modèle.
+        </div>
+      )}
+
       <div>
         <label className="block font-mono text-xs uppercase text-stone">Titre</label>
         <input
@@ -147,29 +193,136 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block font-mono text-xs uppercase text-stone">Date et heure</label>
-          <input
-            type="datetime-local"
-            required
-            value={dateDebut}
-            onChange={(e) => setDateDebut(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-          />
+      {estUneSeance ? (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block font-mono text-xs uppercase text-stone">
+              Date de cette séance
+            </label>
+            <p className="mt-1 rounded-md border border-line bg-line/20 px-3 py-2 text-ink">
+              {new Date(event.date_debut).toLocaleString("fr-FR", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })}
+            </p>
+          </div>
+          <div>
+            <label className="block font-mono text-xs uppercase text-stone">
+              Capacité max
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={capacite}
+              onChange={(e) => setCapacite(e.target.value)}
+              placeholder="Illimitée"
+              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block font-mono text-xs uppercase text-stone">Capacité max</label>
-          <input
-            type="number"
-            min={1}
-            value={capacite}
-            onChange={(e) => setCapacite(e.target.value)}
-            placeholder="Illimitée"
-            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-          />
-        </div>
-      </div>
+      ) : (
+        <>
+          <div>
+            <label className="block font-mono text-xs uppercase text-stone">
+              Type d&apos;événement
+            </label>
+            <div className="mt-1 flex gap-1 rounded-md bg-line/50 p-1 font-mono text-xs uppercase">
+              <button
+                type="button"
+                onClick={() => setType("ponctuel")}
+                className={`flex-1 rounded px-3 py-2 ${
+                  type === "ponctuel" ? "bg-white text-ink shadow-sm" : "text-stone"
+                }`}
+              >
+                Ponctuel
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("recurrent")}
+                className={`flex-1 rounded px-3 py-2 ${
+                  type === "recurrent" ? "bg-white text-ink shadow-sm" : "text-stone"
+                }`}
+              >
+                Récurrent (hebdomadaire)
+              </button>
+            </div>
+          </div>
+
+          {type === "ponctuel" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Date et heure
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={dateDebut}
+                  onChange={(e) => setDateDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Capacité max
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={capacite}
+                  onChange={(e) => setCapacite(e.target.value)}
+                  placeholder="Illimitée"
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Jour
+                </label>
+                <select
+                  value={jourSemaine}
+                  onChange={(e) => setJourSemaine(Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                >
+                  {JOURS_SEMAINE.map((j) => (
+                    <option key={j.valeur} value={j.valeur}>
+                      {j.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Heure
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={heureDebut}
+                  onChange={(e) => setHeureDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Capacité / séance
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={capacite}
+                  onChange={(e) => setCapacite(e.target.value)}
+                  placeholder="Illimitée"
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <div>
         <label className="block font-mono text-xs uppercase text-stone">Lieu</label>
