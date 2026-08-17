@@ -71,6 +71,12 @@ export default async function TableauDeBordAdmin() {
                     Stats
                   </Link>
                   <Link
+                    href={`/admin/inscrits/${event.id}`}
+                    className="text-emerald hover:underline"
+                  >
+                    Inscrits
+                  </Link>
+                  <Link
                     href={`/admin/scan?event=${event.id}`}
                     className="text-emerald hover:underline"
                   >
