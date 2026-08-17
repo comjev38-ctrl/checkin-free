@@ -194,7 +194,8 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         />
       </div>
       <p className="-mt-2 text-xs text-stone">
-        Laisse vide pour garder l&apos;image actuelle. 5 Mo max chacune.
+        Laisse vide pour garder l&apos;image actuelle. 5 Mo max chacune. Logo :
+        carré, min. 500×500 px. Bannière : large, environ 1600×500 px.
       </p>
 
       <div>

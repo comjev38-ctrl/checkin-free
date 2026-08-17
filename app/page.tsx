@@ -25,7 +25,7 @@ export default async function PageAccueil() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-6">
           <p className="font-display text-xl italic text-ink">CheckIn Free</p>
           <Link
-            href="/admin/connexion"
+            href="/admin"
             className="font-mono text-xs uppercase tracking-wide text-stone hover:text-ink hover:underline"
           >
             Espace organisateur

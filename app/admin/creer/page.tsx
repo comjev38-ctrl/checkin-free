@@ -195,8 +195,8 @@ export default function PageCreerEvenement() {
             </div>
           </div>
           <p className="-mt-2 text-xs text-stone">
-            Optionnel, 5 Mo max chacun. Le logo s&apos;affiche en médaillon,
-            la bannière en grande image en haut de la page.
+            Optionnel, 5 Mo max chacun. Logo : carré, min. 500×500 px. Bannière :
+            large, environ 1600×500 px.
           </p>
 
           {erreur && <p className="text-sm text-rose">{erreur}</p>}
