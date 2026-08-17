@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { uploaderImageEvenement } from "@/lib/stockage";
 
 type Event = {
   id: string;
@@ -13,6 +14,8 @@ type Event = {
   date_debut: string;
   capacite_max: number | null;
   statut: "brouillon" | "publie" | "clos";
+  logo_url: string | null;
+  image_url: string | null;
 };
 
 function versDatetimeLocal(iso: string) {
@@ -21,6 +24,49 @@ function versDatetimeLocal(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
     d.getHours()
   )}:${pad(d.getMinutes())}`;
+}
+
+function ChampImage({
+  label,
+  formeRonde,
+  urlActuelle,
+  onFichierChoisi,
+}: {
+  label: string;
+  formeRonde?: boolean;
+  urlActuelle: string | null;
+  onFichierChoisi: (f: File | null, apercu: string | null) => void;
+}) {
+  const [apercu, setApercu] = useState<string | null>(null);
+
+  return (
+    <div>
+      <label className="block font-mono text-xs uppercase text-stone">{label}</label>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const f = e.target.files?.[0] ?? null;
+          const url = f ? URL.createObjectURL(f) : null;
+          setApercu(url);
+          onFichierChoisi(f, url);
+        }}
+        className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+      />
+      {(apercu || urlActuelle) && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={apercu ?? urlActuelle ?? ""}
+          alt=""
+          className={
+            formeRonde
+              ? "mt-2 h-16 w-16 rounded-full border border-line object-cover"
+              : "mt-2 h-16 w-full rounded-md border border-line object-cover"
+          }
+        />
+      )}
+    </div>
+  );
 }
 
 export default function FormulaireModifierEvenement({ event }: { event: Event }) {
@@ -33,6 +79,8 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
     event.capacite_max != null ? String(event.capacite_max) : ""
   );
   const [statut, setStatut] = useState(event.statut);
+  const [logoFichier, setLogoFichier] = useState<File | null>(null);
+  const [banniereFichier, setBanniereFichier] = useState<File | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
 
@@ -42,25 +90,36 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
     setErreur(null);
 
     const supabase = createClient();
-    const { error } = await supabase
-      .from("events")
-      .update({
-        titre,
-        description,
-        lieu,
-        date_debut: dateDebut,
-        capacite_max: capacite ? Number(capacite) : null,
-        statut,
-      })
-      .eq("id", event.id);
 
-    setEnCours(false);
-    if (error) {
-      setErreur(error.message);
-      return;
+    try {
+      const [logoUrl, banniereUrl] = await Promise.all([
+        logoFichier ? uploaderImageEvenement(supabase, logoFichier, "logo") : null,
+        banniereFichier
+          ? uploaderImageEvenement(supabase, banniereFichier, "banniere")
+          : null,
+      ]);
+
+      const { error } = await supabase
+        .from("events")
+        .update({
+          titre,
+          description,
+          lieu,
+          date_debut: dateDebut,
+          capacite_max: capacite ? Number(capacite) : null,
+          statut,
+          ...(logoUrl ? { logo_url: logoUrl } : {}),
+          ...(banniereUrl ? { image_url: banniereUrl } : {}),
+        })
+        .eq("id", event.id);
+
+      if (error) throw error;
+      router.push("/admin");
+      router.refresh();
+    } catch (err: any) {
+      setErreur(err.message ?? "Une erreur est survenue.");
+      setEnCours(false);
     }
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
@@ -120,6 +179,23 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <ChampImage
+          label="Logo (carré)"
+          formeRonde
+          urlActuelle={event.logo_url}
+          onFichierChoisi={(f) => setLogoFichier(f)}
+        />
+        <ChampImage
+          label="Bannière (large)"
+          urlActuelle={event.image_url}
+          onFichierChoisi={(f) => setBanniereFichier(f)}
+        />
+      </div>
+      <p className="-mt-2 text-xs text-stone">
+        Laisse vide pour garder l&apos;image actuelle. 5 Mo max chacune.
+      </p>
 
       <div>
         <label className="block font-mono text-xs uppercase text-stone">Statut</label>

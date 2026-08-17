@@ -97,22 +97,29 @@ function CarteEvenement({ event }: { event: any }) {
       href={`/evenement/${event.slug}`}
       className="group flex flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:border-ink/30 hover:shadow-md"
     >
-      {event.image_url ? (
-        <div className="relative h-40 w-full">
+      <div className="relative h-40 w-full">
+        {event.image_url ? (
+          <Image src={event.image_url} alt={event.titre} fill className="object-cover" />
+        ) : event.logo_url ? (
           <Image
-            src={event.image_url}
+            src={event.logo_url}
             alt={event.titre}
             fill
-            className="object-cover"
+            className="object-cover blur-sm"
           />
-        </div>
-      ) : (
-        <div className="flex h-40 w-full items-center justify-center bg-ink/5">
-          <span className="font-display text-3xl italic text-ink/20">
-            {event.titre.charAt(0)}
-          </span>
-        </div>
-      )}
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-ink/5">
+            <span className="font-display text-3xl italic text-ink/20">
+              {event.titre.charAt(0)}
+            </span>
+          </div>
+        )}
+        {event.logo_url && (
+          <div className="absolute bottom-3 left-3 h-10 w-10 overflow-hidden rounded-full border-2 border-white shadow-sm">
+            <Image src={event.logo_url} alt="" fill className="object-cover" />
+          </div>
+        )}
+      </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="font-mono text-[11px] uppercase tracking-wide text-emerald">
           {date}

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import FormulaireInscription from "./formulaire-inscription";
 
 export const revalidate = 0;
@@ -40,6 +41,17 @@ export default async function PageEvenement({
 
   return (
     <main className="min-h-screen bg-paper">
+      <div className="border-b border-line bg-white">
+        <div className="mx-auto max-w-2xl px-6 py-4">
+          <Link
+            href="/"
+            className="font-mono text-xs uppercase tracking-wide text-stone hover:text-ink hover:underline"
+          >
+            ← CheckIn Free
+          </Link>
+        </div>
+      </div>
+
       {event.image_url && (
         <div className="relative h-64 w-full sm:h-80">
           <Image
@@ -50,6 +62,18 @@ export default async function PageEvenement({
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
+        </div>
+      )}
+
+      {event.logo_url && (
+        <div
+          className={`mx-auto max-w-2xl px-6 ${
+            event.image_url ? "-mt-10 sm:-mt-12" : "pt-10"
+          }`}
+        >
+          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paper bg-white shadow-md sm:h-24 sm:w-24">
+            <Image src={event.logo_url} alt="" fill className="object-cover" />
+          </div>
         </div>
       )}
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { uploaderImageEvenement } from "@/lib/stockage";
 
 function creerSlug(titre: string) {
   return titre
@@ -20,8 +21,22 @@ export default function PageCreerEvenement() {
   const [lieu, setLieu] = useState("");
   const [dateDebut, setDateDebut] = useState("");
   const [capacite, setCapacite] = useState("");
+  const [logoFichier, setLogoFichier] = useState<File | null>(null);
+  const [logoApercu, setLogoApercu] = useState<string | null>(null);
+  const [banniereFichier, setBanniereFichier] = useState<File | null>(null);
+  const [banniereApercu, setBanniereApercu] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
+
+  function choisirFichier(
+    e: React.ChangeEvent<HTMLInputElement>,
+    setFichier: (f: File | null) => void,
+    setApercu: (u: string | null) => void
+  ) {
+    const f = e.target.files?.[0] ?? null;
+    setFichier(f);
+    setApercu(f ? URL.createObjectURL(f) : null);
+  }
 
   async function creerEtPublier(e: React.FormEvent, statut: "brouillon" | "publie") {
     e.preventDefault();
@@ -33,9 +48,15 @@ export default function PageCreerEvenement() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-      .from("events")
-      .insert({
+    try {
+      const [logoUrl, banniereUrl] = await Promise.all([
+        logoFichier ? uploaderImageEvenement(supabase, logoFichier, "logo") : null,
+        banniereFichier
+          ? uploaderImageEvenement(supabase, banniereFichier, "banniere")
+          : null,
+      ]);
+
+      const { error } = await supabase.from("events").insert({
         admin_id: user!.id,
         titre,
         slug: creerSlug(titre),
@@ -44,21 +65,20 @@ export default function PageCreerEvenement() {
         date_debut: dateDebut,
         capacite_max: capacite ? Number(capacite) : null,
         statut,
-      })
-      .select("id")
-      .single();
+        logo_url: logoUrl,
+        image_url: banniereUrl,
+      });
 
-    if (error) {
+      if (error) throw error;
+      router.push("/admin");
+    } catch (err: any) {
       setErreur(
-        error.message.includes("duplicate")
+        err.message?.includes("duplicate")
           ? "Un événement avec un titre similaire existe déjà."
-          : error.message
+          : err.message ?? "Une erreur est survenue."
       );
       setEnCours(false);
-      return;
     }
-
-    router.push("/admin");
   }
 
   return (
@@ -79,7 +99,7 @@ export default function PageCreerEvenement() {
               value={titre}
               onChange={(e) => setTitre(e.target.value)}
               className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-              placeholder="Soirée gospel de l'AEEG"
+              placeholder="Soirée gospel"
             />
             {titre && (
               <p className="mt-1 text-xs text-stone">
@@ -132,6 +152,53 @@ export default function PageCreerEvenement() {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block font-mono text-xs uppercase text-stone">
+                Logo (carré)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => choisirFichier(e, setLogoFichier, setLogoApercu)}
+                className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+              />
+              {logoApercu && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoApercu}
+                  alt=""
+                  className="mt-2 h-16 w-16 rounded-full border border-line object-cover"
+                />
+              )}
+            </div>
+            <div>
+              <label className="block font-mono text-xs uppercase text-stone">
+                Bannière (large)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  choisirFichier(e, setBanniereFichier, setBanniereApercu)
+                }
+                className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+              />
+              {banniereApercu && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={banniereApercu}
+                  alt=""
+                  className="mt-2 h-16 w-full rounded-md border border-line object-cover"
+                />
+              )}
+            </div>
+          </div>
+          <p className="-mt-2 text-xs text-stone">
+            Optionnel, 5 Mo max chacun. Le logo s&apos;affiche en médaillon,
+            la bannière en grande image en haut de la page.
+          </p>
+
           {erreur && <p className="text-sm text-rose">{erreur}</p>}
 
           <div className="flex gap-3 pt-2">
@@ -147,7 +214,7 @@ export default function PageCreerEvenement() {
               disabled={enCours}
               className="flex-1 rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
             >
-              Publier la page
+              {enCours ? "Envoi…" : "Publier la page"}
             </button>
           </div>
         </form>
