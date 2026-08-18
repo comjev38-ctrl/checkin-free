@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { genererQrDataUrl } from "@/lib/qrcode";
 
@@ -9,7 +9,7 @@ export default async function PageBillet({
 }: {
   params: { id: string };
 }) {
-  const supabase = createClient();
+  const supabase = createServiceClient();
 
   const { data: ticket } = await supabase
     .from("tickets")

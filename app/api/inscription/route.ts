@@ -62,5 +62,38 @@ export async function POST(req: Request) {
     body: JSON.stringify({ ticketId: ticket.id }),
   }).catch(() => {});
 
+  notifierAdmins(supabase, event.titre, prenom, nom).catch(() => {});
+
   return NextResponse.json({ ticketId: ticket.id });
+}
+
+async function notifierAdmins(
+  supabase: ReturnType<typeof createServiceClient>,
+  titreEvenement: string,
+  prenom: string,
+  nom: string
+) {
+  if (!process.env.RESEND_API_KEY) return;
+
+  const { data: admins } = await supabase.from("admins").select("email");
+  const destinataires = (admins ?? []).map((a: { email: string }) => a.email);
+  if (destinataires.length === 0) return;
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+    to: destinataires,
+    subject: `Nouvelle inscription — ${titreEvenement}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+        <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">
+          Nouvelle inscription
+        </p>
+        <h1 style="font-size:20px; margin:4px 0 16px;">${titreEvenement}</h1>
+        <p><strong>${prenom} ${nom}</strong> vient de réserver sa place.</p>
+      </div>
+    `,
+  });
 }

@@ -8,32 +8,41 @@ export function FormulaireInviter() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
+  const [avertissement, setAvertissement] = useState<string | null>(null);
+  const [succes, setSucces] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
 
   async function inviter(e: React.FormEvent) {
     e.preventDefault();
     setErreur(null);
+    setAvertissement(null);
+    setSucces(null);
     setEnCours(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("admins")
-      .insert({ email: email.trim().toLowerCase() });
+
+    const res = await fetch("/api/inviter-membre", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
     setEnCours(false);
 
-    if (error) {
-      setErreur(
-        error.message.includes("duplicate")
-          ? "Cette personne est déjà membre."
-          : error.message
-      );
+    if (!res.ok) {
+      setErreur(data.message ?? "Une erreur est survenue.");
       return;
+    }
+
+    if (data.inviteEnvoyee) {
+      setSucces(`Invitation envoyée à ${email}.`);
+    } else {
+      setAvertissement(data.avertissement);
     }
     setEmail("");
     router.refresh();
   }
 
   return (
-    <form onSubmit={inviter} className="mt-6 flex gap-2">
+    <form onSubmit={inviter} className="mt-6 flex flex-wrap gap-2">
       <input
         type="email"
         required
@@ -49,7 +58,9 @@ export function FormulaireInviter() {
       >
         {enCours ? "…" : "Inviter"}
       </button>
-      {erreur && <p className="text-sm text-rose">{erreur}</p>}
+      {erreur && <p className="w-full text-sm text-rose">{erreur}</p>}
+      {avertissement && <p className="w-full text-sm text-amber">{avertissement}</p>}
+      {succes && <p className="w-full text-sm text-emerald">{succes}</p>}
     </form>
   );
 }
