@@ -91,6 +91,7 @@ export default async function TableauDeBordAdmin() {
                         <>
                           Tous les {JOURS[event.jour_semaine]} à{" "}
                           {event.heure_debut?.slice(0, 5)}
+                          {event.heure_fin && ` – ${event.heure_fin.slice(0, 5)}`}
                           {seance && (
                             <>
                               {" "}

@@ -14,6 +14,7 @@ type EvenementModele = {
   admin_id: string | null;
   jour_semaine: number;
   heure_debut: string;
+  heure_fin: string | null;
 };
 
 /**
@@ -28,7 +29,11 @@ type EvenementModele = {
  */
 export async function obtenirOuCreerOccurrence(modele: EvenementModele) {
   const supabase = createServiceClient();
-  const cible = calculerProchaineOccurrence(modele.jour_semaine, modele.heure_debut);
+  const cible = calculerProchaineOccurrence(
+    modele.jour_semaine,
+    modele.heure_debut,
+    modele.heure_fin
+  );
   const cibleISO = cible.toISOString();
 
   const { data: existante } = await supabase
@@ -46,7 +51,9 @@ export async function obtenirOuCreerOccurrence(modele: EvenementModele) {
       parent_event_id: modele.id,
       admin_id: modele.admin_id,
       titre: modele.titre,
-      slug: `${modele.slug}-${formaterDateISOCourte(cible)}`,
+      slug: `${modele.slug}-${formaterDateISOCourte(cible)}-${String(
+        cible.getHours()
+      ).padStart(2, "0")}h${String(cible.getMinutes()).padStart(2, "0")}`,
       description: modele.description,
       lieu: modele.lieu,
       capacite_max: modele.capacite_max,
@@ -54,6 +61,7 @@ export async function obtenirOuCreerOccurrence(modele: EvenementModele) {
       image_url: modele.image_url,
       statut: "publie",
       date_debut: cibleISO,
+      heure_fin: modele.heure_fin,
     })
     .select("*")
     .single();

@@ -20,6 +20,7 @@ type Event = {
   recurrence: "hebdomadaire" | null;
   jour_semaine: number | null;
   heure_debut: string | null;
+  heure_fin: string | null;
 };
 
 const JOURS_SEMAINE = [
@@ -98,6 +99,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
   const [heureDebut, setHeureDebut] = useState(
     event.heure_debut?.slice(0, 5) ?? "19:00"
   );
+  const [heureFin, setHeureFin] = useState(event.heure_fin?.slice(0, 5) ?? "");
   const [capacite, setCapacite] = useState(
     event.capacite_max != null ? String(event.capacite_max) : ""
   );
@@ -139,6 +141,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             recurrence: "hebdomadaire" as const,
             jour_semaine: jourSemaine,
             heure_debut: heureDebut,
+            heure_fin: heureFin || null,
           }
         : {
             recurrence: null,
@@ -277,49 +280,67 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Jour
-                </label>
-                <select
-                  value={jourSemaine}
-                  onChange={(e) => setJourSemaine(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                >
-                  {JOURS_SEMAINE.map((j) => (
-                    <option key={j.valeur} value={j.valeur}>
-                      {j.label}
-                    </option>
-                  ))}
-                </select>
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Jour
+                  </label>
+                  <select
+                    value={jourSemaine}
+                    onChange={(e) => setJourSemaine(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  >
+                    {JOURS_SEMAINE.map((j) => (
+                      <option key={j.valeur} value={j.valeur}>
+                        {j.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Début
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={heureDebut}
+                    onChange={(e) => setHeureDebut(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Fin
+                  </label>
+                  <input
+                    type="time"
+                    value={heureFin}
+                    onChange={(e) => setHeureFin(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Capacité / séance
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={capacite}
+                    onChange={(e) => setCapacite(e.target.value)}
+                    placeholder="Illimitée"
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Heure
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={heureDebut}
-                  onChange={(e) => setHeureDebut(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Capacité / séance
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={capacite}
-                  onChange={(e) => setCapacite(e.target.value)}
-                  placeholder="Illimitée"
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                />
-              </div>
-            </div>
+              <p className="-mt-2 text-xs text-stone">
+                La séance de la semaine reste affichée jusqu&apos;à
+                l&apos;heure de fin — c&apos;est seulement après qu&apos;une
+                nouvelle séance sera créée pour la semaine suivante.
+              </p>
+            </>
           )}
         </>
       )}

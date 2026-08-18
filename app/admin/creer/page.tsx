@@ -33,7 +33,8 @@ export default function PageCreerEvenement() {
   const [lieu, setLieu] = useState("");
   const [dateDebut, setDateDebut] = useState("");
   const [jourSemaine, setJourSemaine] = useState(4); // jeudi par défaut
-  const [heureDebut, setHeureDebut] = useState("19:00");
+  const [heureDebut, setHeureDebut] = useState("17:00");
+  const [heureFin, setHeureFin] = useState("19:00");
   const [capacite, setCapacite] = useState("");
   const [logoFichier, setLogoFichier] = useState<File | null>(null);
   const [logoApercu, setLogoApercu] = useState<string | null>(null);
@@ -89,11 +90,13 @@ export default function PageCreerEvenement() {
               recurrence: "hebdomadaire",
               jour_semaine: jourSemaine,
               heure_debut: heureDebut,
+              heure_fin: heureFin || null,
               // Valeur informative seulement : la vraie date affichée
               // est recalculée à chaque visite via jour_semaine/heure_debut.
               date_debut: calculerProchaineOccurrence(
                 jourSemaine,
-                heureDebut
+                heureDebut,
+                heureFin || null
               ).toISOString(),
             })
           : await supabase.from("events").insert({
@@ -212,49 +215,67 @@ export default function PageCreerEvenement() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Jour
-                </label>
-                <select
-                  value={jourSemaine}
-                  onChange={(e) => setJourSemaine(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                >
-                  {JOURS_SEMAINE.map((j) => (
-                    <option key={j.valeur} value={j.valeur}>
-                      {j.label}
-                    </option>
-                  ))}
-                </select>
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Jour
+                  </label>
+                  <select
+                    value={jourSemaine}
+                    onChange={(e) => setJourSemaine(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  >
+                    {JOURS_SEMAINE.map((j) => (
+                      <option key={j.valeur} value={j.valeur}>
+                        {j.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Début
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={heureDebut}
+                    onChange={(e) => setHeureDebut(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Fin
+                  </label>
+                  <input
+                    type="time"
+                    value={heureFin}
+                    onChange={(e) => setHeureFin(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs uppercase text-stone">
+                    Capacité
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={capacite}
+                    onChange={(e) => setCapacite(e.target.value)}
+                    placeholder="Illimitée"
+                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Heure
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={heureDebut}
-                  onChange={(e) => setHeureDebut(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Capacité / séance
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={capacite}
-                  onChange={(e) => setCapacite(e.target.value)}
-                  placeholder="Illimitée"
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                />
-              </div>
-            </div>
+              <p className="-mt-2 text-xs text-stone">
+                La séance de la semaine reste affichée jusqu&apos;à l&apos;heure
+                de fin (ex: 19h) — c&apos;est seulement après qu&apos;une
+                nouvelle séance sera créée pour la semaine suivante.
+              </p>
+            </>
           )}
 
           <div>

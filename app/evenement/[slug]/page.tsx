@@ -28,13 +28,26 @@ export default async function PageEvenement({
   // affiche — le lien public reste toujours le même d'une semaine
   // à l'autre.
   let event = brut;
+  let erreurResolution: string | null = null;
   if (brut.recurrence === "hebdomadaire" && !brut.parent_event_id) {
     try {
       event = await obtenirOuCreerOccurrence(brut);
     } catch (err) {
       console.error("Résolution de séance récurrente échouée :", err);
-      notFound();
+      erreurResolution =
+        "Un souci technique empêche l'affichage de la séance de cette semaine. Réessaie dans un instant.";
     }
+  }
+
+  if (erreurResolution) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-paper px-6">
+        <div className="max-w-sm text-center">
+          <p className="font-display text-2xl italic text-ink">{brut.titre}</p>
+          <p className="mt-4 text-stone">{erreurResolution}</p>
+        </div>
+      </main>
+    );
   }
 
   const { count: placesReservees } = await supabase
@@ -54,6 +67,10 @@ export default async function PageEvenement({
     minute: "2-digit",
   });
 
+  const heureFinAffichee = event.heure_fin
+    ? event.heure_fin.slice(0, 5).replace(":", "h")
+    : null;
+
   return (
     <main className="min-h-screen bg-paper">
       <div className="border-b border-line bg-white">
@@ -68,13 +85,14 @@ export default async function PageEvenement({
       </div>
 
       {event.image_url && (
-        <div className="relative h-64 w-full sm:h-80">
+        <div className="relative aspect-[16/5] max-h-[420px] w-full">
           <Image
             src={event.image_url}
             alt={event.titre}
             fill
             className="object-cover"
             priority
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
         </div>
@@ -109,7 +127,10 @@ export default async function PageEvenement({
             <dt className="w-20 shrink-0 font-mono text-xs uppercase text-stone">
               Quand
             </dt>
-            <dd className="capitalize">{dateEvenement}</dd>
+            <dd className="capitalize">
+              {dateEvenement}
+              {heureFinAffichee && <> – {heureFinAffichee}</>}
+            </dd>
           </div>
           {event.lieu && (
             <div className="flex gap-2">
