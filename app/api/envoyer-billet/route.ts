@@ -12,6 +12,9 @@ export async function POST(req: Request) {
   // Optionnel : si aucune clé Resend n'est configurée, on ne bloque
   // pas l'inscription — la page de confirmation avec QR suffit.
   if (!process.env.RESEND_API_KEY) {
+    console.warn(
+      "RESEND_API_KEY absente sur Vercel : email de billet non envoyé (c'est probablement la cause si aucun email n'arrive)."
+    );
     return NextResponse.json({ skipped: true });
   }
 
@@ -37,24 +40,32 @@ export async function POST(req: Request) {
     timeStyle: "short",
   });
 
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-    to: ticket.email,
-    subject: `Ton billet — ${event.titre}`,
-    attachments: [
-      { filename: "billet.png", content: qrBase64 },
-    ],
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-        <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">Billet confirmé</p>
-        <h1 style="font-size:22px; margin:4px 0 16px;">${event.titre}</h1>
-        <p>${dateEvenement}${event.lieu ? ` — ${event.lieu}` : ""}</p>
-        <p>Titulaire : <strong>${nomComplet}</strong></p>
-        <p>Code billet : <strong>${ticket.code}</strong></p>
-        <p>Ton QR code est en pièce jointe. Présente-le à l'entrée.</p>
-      </div>
-    `,
-  });
+  try {
+    const { error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+      to: ticket.email,
+      subject: `Ton billet — ${event.titre}`,
+      attachments: [{ filename: "billet.png", content: qrBase64 }],
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+          <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">Billet confirmé</p>
+          <h1 style="font-size:22px; margin:4px 0 16px;">${event.titre}</h1>
+          <p>${dateEvenement}${event.lieu ? ` — ${event.lieu}` : ""}</p>
+          <p>Titulaire : <strong>${nomComplet}</strong></p>
+          <p>Code billet : <strong>${ticket.code}</strong></p>
+          <p>Ton QR code est en pièce jointe. Présente-le à l'entrée.</p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Resend a refusé l'envoi du billet :", error);
+      return NextResponse.json({ sent: false, erreur: error }, { status: 502 });
+    }
+  } catch (err) {
+    console.error("Exception lors de l'envoi du billet via Resend :", err);
+    return NextResponse.json({ sent: false }, { status: 500 });
+  }
 
   return NextResponse.json({ sent: true });
 }

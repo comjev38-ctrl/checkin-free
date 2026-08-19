@@ -42,17 +42,31 @@ export async function POST(req: Request) {
     { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/admin/compte` }
   );
 
-  if (erreurInvite) {
-    // La personne est déjà ajoutée à l'équipe (donc pas bloquant),
-    // mais elle devra utiliser le lien magique manuellement plutôt
-    // que de recevoir une invitation automatique.
-    return NextResponse.json({
-      ajoute: true,
-      inviteEnvoyee: false,
-      avertissement:
-        "Membre ajouté, mais l'email d'invitation n'a pas pu être envoyé (compte déjà existant ?). Il peut se connecter via lien magique.",
-    });
+  if (!erreurInvite) {
+    return NextResponse.json({ ajoute: true, inviteEnvoyee: true });
   }
 
-  return NextResponse.json({ ajoute: true, inviteEnvoyee: true });
+  // Cas le plus fréquent : cette personne a déjà un compte Supabase
+  // Auth (elle s'est peut-être déjà connectée avant d'être ajoutée à
+  // l'équipe). inviteUserByEmail ne fonctionne que pour un compte
+  // tout neuf — on bascule alors sur un lien magique classique, qui
+  // fonctionne pour un compte existant.
+  const { error: erreurOtp } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/admin`,
+    },
+  });
+
+  if (!erreurOtp) {
+    return NextResponse.json({ ajoute: true, inviteEnvoyee: true, viaLienMagique: true });
+  }
+
+  console.error("Invitation membre — envoi impossible :", erreurInvite, erreurOtp);
+  return NextResponse.json({
+    ajoute: true,
+    inviteEnvoyee: false,
+    avertissement:
+      "Membre ajouté, mais aucun email n'a pu être envoyé automatiquement. Il peut se connecter via lien magique depuis /admin/connexion.",
+  });
 }
