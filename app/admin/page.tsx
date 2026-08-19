@@ -73,10 +73,10 @@ export default async function TableauDeBordAdmin() {
               return (
                 <div
                   key={event.id}
-                  className="flex flex-col overflow-hidden rounded-xl border border-line bg-white"
+                  className="flex flex-col rounded-xl border border-line bg-white"
                 >
                   {/* Vignette */}
-                  <div className="relative h-32 w-full bg-ink/5">
+                  <div className="relative h-32 w-full overflow-hidden rounded-t-xl bg-ink/5">
                     {event.image_url ? (
                       <Image
                         src={event.image_url}
@@ -153,7 +153,7 @@ export default async function TableauDeBordAdmin() {
                       </Link>
                       {idPourActions && (
                         <Link
-                          href={`/admin/scan?event=${idPourActions}`}
+                          href={`/admin/stats/${idPourActions}`}
                           className="flex-1 rounded-md bg-ink px-3 py-2 text-center text-sm text-paper hover:bg-ink/90"
                         >
                           Administrer
@@ -166,6 +166,12 @@ export default async function TableauDeBordAdmin() {
                         <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-line bg-white py-1 shadow-lg">
                           {idPourActions && (
                             <>
+                              <Link
+                                href={`/admin/scan?event=${idPourActions}`}
+                                className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                              >
+                                Scanner les billets
+                              </Link>
                               <Link
                                 href={`/admin/stats/${idPourActions}`}
                                 className="block px-4 py-2 text-sm text-ink hover:bg-line/20"

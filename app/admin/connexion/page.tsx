@@ -16,6 +16,34 @@ function FormulaireConnexion() {
 
   useEffect(() => {
     if (searchParams.get("erreur") === "lien_invalide") {
+      // Les invitations envoyées via l'API admin (inviteUserByEmail)
+      // transmettent la session via un fragment d'URL (#access_token=...),
+      // invisible côté serveur — c'est pour ça que /auth/callback
+      // (qui ne lit que ?code=) nous redirige ici en pensant que le
+      // lien est invalide, alors que la session est juste à côté,
+      // dans le fragment. On la récupère nous-mêmes ici.
+      const hash = window.location.hash;
+      if (hash.includes("access_token")) {
+        const params = new URLSearchParams(hash.slice(1));
+        const access_token = params.get("access_token");
+        const refresh_token = params.get("refresh_token");
+        if (access_token && refresh_token) {
+          const supabase = createClient();
+          supabase.auth
+            .setSession({ access_token, refresh_token })
+            .then(({ error }) => {
+              if (!error) {
+                router.push("/admin");
+                router.refresh();
+              } else {
+                setErreur(
+                  "Ce lien a expiré ou a déjà été utilisé. Redemande une invitation."
+                );
+              }
+            });
+          return;
+        }
+      }
       setErreur(
         "Ce lien a expiré ou a déjà été utilisé. Redemande un nouveau lien ci-dessous."
       );
@@ -25,7 +53,7 @@ function FormulaireConnexion() {
         "Ton compte n'est pas autorisé à accéder à l'espace admin. Demande à un membre existant de t'ajouter depuis la page Membres."
       );
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   async function connexionMotDePasse(e: React.FormEvent) {
     e.preventDefault();
