@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function PageCompte() {
+function PageCompteInterne() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const changementObligatoire = searchParams.get("mdp_provisoire") === "1";
+
   const [email, setEmail] = useState("");
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
@@ -77,79 +82,102 @@ export default function PageCompte() {
     setEnCoursMdp(true);
     const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ password: motDePasse });
-    setEnCoursMdp(false);
 
     if (error) {
+      setEnCoursMdp(false);
       setErreurMdp(error.message);
       return;
     }
-    setSuccesMdp(true);
+
+    // Lève l'obligation de changement, s'il y en avait une.
+    await supabase
+      .from("admins")
+      .update({ mot_de_passe_provisoire: false })
+      .eq("email", email);
+
+    setEnCoursMdp(false);
     setMotDePasse("");
     setConfirmation("");
+
+    if (changementObligatoire) {
+      router.push("/admin");
+      router.refresh();
+    } else {
+      setSuccesMdp(true);
+    }
   }
 
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-sm space-y-12">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
-            Mon compte
-          </p>
-          <h1 className="mt-1 font-display text-3xl italic text-ink">
-            Mon profil
-          </h1>
-          <p className="mt-2 text-sm text-stone">{email}</p>
+        {changementObligatoire && (
+          <div className="rounded-md border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-ink">
+            Tu utilises un mot de passe provisoire. Définis ton propre mot de
+            passe ci-dessous pour continuer.
+          </div>
+        )}
 
-          {!chargement && (
-            <form onSubmit={enregistrerProfil} className="mt-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Prénom
-                  </label>
-                  <input
-                    value={prenom}
-                    onChange={(e) => setPrenom(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                  />
+        {!changementObligatoire && (
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+              Mon compte
+            </p>
+            <h1 className="mt-1 font-display text-3xl italic text-ink">
+              Mon profil
+            </h1>
+            <p className="mt-2 text-sm text-stone">{email}</p>
+
+            {!chargement && (
+              <form onSubmit={enregistrerProfil} className="mt-6 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono text-xs uppercase text-stone">
+                      Prénom
+                    </label>
+                    <input
+                      value={prenom}
+                      onChange={(e) => setPrenom(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-xs uppercase text-stone">
+                      Nom
+                    </label>
+                    <input
+                      value={nom}
+                      onChange={(e) => setNom(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Nom
-                  </label>
-                  <input
-                    value={nom}
-                    onChange={(e) => setNom(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-                  />
-                </div>
-              </div>
 
-              {erreurProfil && <p className="text-sm text-rose">{erreurProfil}</p>}
-              {succesProfil && (
-                <p className="text-sm text-emerald">Profil enregistré.</p>
-              )}
+                {erreurProfil && <p className="text-sm text-rose">{erreurProfil}</p>}
+                {succesProfil && (
+                  <p className="text-sm text-emerald">Profil enregistré.</p>
+                )}
 
-              <button
-                type="submit"
-                disabled={enCoursProfil}
-                className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
-              >
-                {enCoursProfil ? "Enregistrement…" : "Enregistrer mon profil"}
-              </button>
-            </form>
-          )}
-        </div>
+                <button
+                  type="submit"
+                  disabled={enCoursProfil}
+                  className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+                >
+                  {enCoursProfil ? "Enregistrement…" : "Enregistrer mon profil"}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         <div>
           <h2 className="font-display text-2xl italic text-ink">
-            Mot de passe
+            {changementObligatoire ? "Nouveau mot de passe" : "Mot de passe"}
           </h2>
-          <p className="mt-2 text-sm text-stone">
-            Une fois défini, tu pourras te connecter avec ton email et ce mot
-            de passe, sans passer par le lien magique reçu par email à chaque
-            fois. Pratique sur téléphone, le jour de l&apos;événement.
-          </p>
+          {!changementObligatoire && (
+            <p className="mt-2 text-sm text-stone">
+              Change ton mot de passe de connexion à l&apos;espace organisateur.
+            </p>
+          )}
 
           <form onSubmit={definirMotDePasse} className="mt-6 space-y-4">
             <div>
@@ -198,5 +226,13 @@ export default function PageCompte() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PageCompte() {
+  return (
+    <Suspense fallback={null}>
+      <PageCompteInterne />
+    </Suspense>
   );
 }

@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
     // Authentifié ne suffit pas : il faut aussi être dans l'équipe.
     const { data: membre } = await supabase
       .from("admins")
-      .select("email")
+      .select("email, mot_de_passe_provisoire")
       .eq("email", user.email)
       .maybeSingle();
 
@@ -52,6 +52,16 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/connexion";
       url.searchParams.set("erreur", "non_autorise");
+      return NextResponse.redirect(url);
+    }
+
+    // Mot de passe provisoire jamais changé : on bloque tout accès
+    // sauf à la page où le changer.
+    const pageChangementMdp = request.nextUrl.pathname === "/admin/compte";
+    if (membre.mot_de_passe_provisoire && !pageChangementMdp) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/compte";
+      url.searchParams.set("mdp_provisoire", "1");
       return NextResponse.redirect(url);
     }
   }

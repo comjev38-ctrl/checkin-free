@@ -32,10 +32,12 @@ export function FormulaireInviter() {
       return;
     }
 
-    if (data.inviteEnvoyee) {
-      setSucces(`Invitation envoyée à ${email}.`);
+    if (!data.emailEnvoye) {
+      setAvertissement(
+        `Compte créé, mais l'email n'a pas pu être envoyé. Mot de passe provisoire à transmettre toi-même : ${data.motDePasseProvisoire}`
+      );
     } else {
-      setAvertissement(data.avertissement);
+      setSucces(`Invitation envoyée à ${email} avec un mot de passe provisoire.`);
     }
     setEmail("");
     router.refresh();
