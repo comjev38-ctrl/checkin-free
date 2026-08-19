@@ -57,17 +57,26 @@ export async function POST(req: Request) {
   // L'envoi d'email ne doit jamais faire échouer l'inscription : la
   // page de confirmation avec le QR à l'écran reste le canal fiable.
   // On logge quand même l'échec pour pouvoir le diagnostiquer.
-  fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/envoyer-billet`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ticketId: ticket.id }),
-  })
-    .then(async (res) => {
-      if (!res.ok) {
-        console.error("Envoi billet — réponse non OK :", res.status, await res.text());
-      }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!siteUrl || !/^https?:\/\//.test(siteUrl)) {
+    console.error(
+      `NEXT_PUBLIC_SITE_URL invalide ou absente sur Vercel : "${siteUrl}". ` +
+        `Elle doit commencer par https:// (ex: https://checkinfree.com). ` +
+        `Email de billet non envoyé.`
+    );
+  } else {
+    fetch(`${siteUrl}/api/envoyer-billet`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticketId: ticket.id }),
     })
-    .catch((err) => console.error("Envoi billet — fetch échoué :", err));
+      .then(async (res) => {
+        if (!res.ok) {
+          console.error("Envoi billet — réponse non OK :", res.status, await res.text());
+        }
+      })
+      .catch((err) => console.error("Envoi billet — fetch échoué :", err));
+  }
 
   notifierAdmins(supabase, event.titre, prenom, nom).catch((err) =>
     console.error("Notification admins échouée :", err)
