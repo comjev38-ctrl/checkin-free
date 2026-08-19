@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import FormulaireInscription from "./formulaire-inscription";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
+import EntetePublique from "@/components/entete-publique";
 
 export const revalidate = 0;
 
@@ -73,16 +74,7 @@ export default async function PageEvenement({
 
   return (
     <main className="min-h-screen bg-paper">
-      <div className="border-b border-line bg-white">
-        <div className="mx-auto max-w-2xl px-6 py-4">
-          <Link
-            href="/"
-            className="font-mono text-xs uppercase tracking-wide text-stone hover:text-ink hover:underline"
-          >
-            ← CheckIn Free
-          </Link>
-        </div>
-      </div>
+      <EntetePublique retour={{ href: "/", label: "CheckIn Free" }} />
 
       {event.image_url && (
         <div className="relative aspect-[16/5] max-h-[420px] w-full">

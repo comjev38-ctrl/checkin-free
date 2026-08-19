@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { genererQrDataUrl } from "@/lib/qrcode";
+import EntetePublique from "@/components/entete-publique";
 
 export const revalidate = 0;
 
@@ -13,7 +14,7 @@ export default async function PageBillet({
 
   const { data: ticket } = await supabase
     .from("tickets")
-    .select("id, prenom, nom, code, statut, event:events(titre, date_debut, lieu)")
+    .select("id, prenom, nom, code, statut, event:events(titre, slug, date_debut, lieu)")
     .eq("id", params.id)
     .single();
 
@@ -30,7 +31,11 @@ export default async function PageBillet({
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper px-6 py-12">
+    <main className="min-h-screen bg-paper">
+      <EntetePublique
+        retour={{ href: `/evenement/${event.slug}`, label: "Retour à l'événement" }}
+      />
+      <div className="flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <p className="mb-6 text-center font-mono text-xs uppercase tracking-[0.2em] text-emerald">
           Billet confirmé
@@ -76,6 +81,7 @@ export default async function PageBillet({
           {ticket.statut === "utilise" &&
             " Ce billet a déjà été utilisé pour un contrôle d'accès."}
         </p>
+      </div>
       </div>
     </main>
   );

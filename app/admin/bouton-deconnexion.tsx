@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function BoutonDeconnexion() {
+export default function BoutonDeconnexion({
+  className = "text-stone hover:text-ink hover:underline",
+  children = "Déconnexion",
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) {
   const router = useRouter();
 
   async function deconnexion() {
@@ -14,11 +20,8 @@ export default function BoutonDeconnexion() {
   }
 
   return (
-    <button
-      onClick={deconnexion}
-      className="text-stone hover:text-ink hover:underline"
-    >
-      Déconnexion
+    <button onClick={deconnexion} className={className}>
+      {children}
     </button>
   );
 }

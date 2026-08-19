@@ -8,10 +8,12 @@ export default function BoutonSupprimerEvenement({
   eventId,
   titre,
   nbBillets,
+  className = "text-rose hover:underline disabled:opacity-50",
 }: {
   eventId: string;
   titre: string;
   nbBillets: number;
+  className?: string;
 }) {
   const router = useRouter();
   const [enCours, setEnCours] = useState(false);
@@ -37,11 +39,7 @@ export default function BoutonSupprimerEvenement({
   }
 
   return (
-    <button
-      onClick={supprimer}
-      disabled={enCours}
-      className="text-rose hover:underline disabled:opacity-50"
-    >
+    <button onClick={supprimer} disabled={enCours} className={className}>
       {enCours ? "Suppression…" : "Supprimer"}
     </button>
   );

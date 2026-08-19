@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
+import EntetePublique from "@/components/entete-publique";
 
 export const revalidate = 0;
 
@@ -27,17 +28,7 @@ export default async function PageAccueil() {
 
   return (
     <main className="min-h-screen bg-paper">
-      <header className="border-b border-line">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-6">
-          <p className="font-display text-xl italic text-ink">CheckIn Free</p>
-          <Link
-            href="/admin"
-            className="font-mono text-xs uppercase tracking-wide text-stone hover:text-ink hover:underline"
-          >
-            Espace organisateur
-          </Link>
-        </div>
-      </header>
+      <EntetePublique />
 
       <section className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
