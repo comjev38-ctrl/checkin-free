@@ -1,3 +1,5 @@
+import { parisVersUTC } from "@/lib/fuseau";
+
 /**
  * Fonctions de calcul pures, sans dépendance serveur — utilisables
  * aussi bien côté client (formulaires admin) que côté serveur.
@@ -14,7 +16,7 @@
  * séance (donc de nouveaux billets) sera créée à la prochaine visite.
  *
  * jourSemaineISO : 1 = lundi ... 7 = dimanche
- * heureDebut / heureFin : "HH:MM:SS" ou "HH:MM"
+ * heureDebut / heureFin : "HH:MM:SS" ou "HH:MM", en heure de Paris
  */
 export function calculerProchaineOccurrence(
   jourSemaineISO: number,
@@ -23,14 +25,27 @@ export function calculerProchaineOccurrence(
   depuis: Date = new Date()
 ): Date {
   const [h, m] = heureDebut.split(":").map(Number);
-  const cibleDebut = new Date(depuis);
-  cibleDebut.setHours(h, m, 0, 0);
+
+  // On construit la cible en heure de Paris, quel que soit le fuseau
+  // du runtime qui exécute ce code (navigateur ou serveur Vercel).
+  const cibleDebut = parisVersUTC(
+    depuis.getFullYear(),
+    depuis.getMonth() + 1,
+    depuis.getDate(),
+    h,
+    m
+  );
 
   let cibleBascule = cibleDebut;
   if (heureFin) {
     const [hf, mf] = heureFin.split(":").map(Number);
-    cibleBascule = new Date(depuis);
-    cibleBascule.setHours(hf, mf, 0, 0);
+    cibleBascule = parisVersUTC(
+      depuis.getFullYear(),
+      depuis.getMonth() + 1,
+      depuis.getDate(),
+      hf,
+      mf
+    );
   }
 
   const jourActuelISO = depuis.getDay() === 0 ? 7 : depuis.getDay();
@@ -40,8 +55,20 @@ export function calculerProchaineOccurrence(
     decalageJours += 7;
   }
 
-  cibleDebut.setDate(cibleDebut.getDate() + decalageJours);
-  return cibleDebut;
+  if (decalageJours === 0) return cibleDebut;
+
+  // Redécoupe avec le bon jour, toujours en heure de Paris (important
+  // aux changements d'heure d'été/hiver qui pourraient tomber entre
+  // aujourd'hui et le jour cible).
+  const jourCible = new Date(depuis);
+  jourCible.setDate(jourCible.getDate() + decalageJours);
+  return parisVersUTC(
+    jourCible.getFullYear(),
+    jourCible.getMonth() + 1,
+    jourCible.getDate(),
+    h,
+    m
+  );
 }
 
 export function formaterDateISOCourte(d: Date) {

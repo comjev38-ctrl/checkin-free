@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uploaderImageEvenement } from "@/lib/stockage";
+import { datetimeLocalVersISO } from "@/lib/fuseau";
 
 type Event = {
   id: string;
@@ -147,7 +148,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             recurrence: null,
             jour_semaine: null,
             heure_debut: null,
-            date_debut: dateDebut,
+            date_debut: datetimeLocalVersISO(dateDebut),
           };
 
       const { error } = await supabase
@@ -156,6 +157,23 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         .eq("id", event.id);
 
       if (error) throw error;
+
+      // Un événement récurrent : les séances déjà créées (semaine en
+      // cours ou à venir) sont des copies figées au moment de leur
+      // création. Sans ça, changer le lieu, l'heure ou la capacité
+      // n'aurait aucun effet visible avant la semaine suivante — ce
+      // qui ressemble à un bug ("mes modifications ne sont pas prises
+      // en compte"). On répercute donc immédiatement sur les séances
+      // pas encore passées. Les séances déjà passées ne sont jamais
+      // touchées : elles restent un historique fidèle.
+      if (!estUneSeance && type === "recurrent") {
+        await supabase
+          .from("events")
+          .update(donneesCommunes)
+          .eq("parent_event_id", event.id)
+          .gte("date_debut", new Date().toISOString());
+      }
+
       router.push("/admin");
       router.refresh();
     } catch (err: any) {

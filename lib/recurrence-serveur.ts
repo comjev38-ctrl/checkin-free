@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
-import { calculerProchaineOccurrence, formaterDateISOCourte } from "@/lib/recurrence";
+import { calculerProchaineOccurrence } from "@/lib/recurrence";
+import { heureMinuteParis, dateISOCourteParis } from "@/lib/fuseau";
 
 type EvenementModele = {
   id: string;
@@ -51,9 +52,10 @@ export async function obtenirOuCreerOccurrence(modele: EvenementModele) {
       parent_event_id: modele.id,
       admin_id: modele.admin_id,
       titre: modele.titre,
-      slug: `${modele.slug}-${formaterDateISOCourte(cible)}-${String(
-        cible.getHours()
-      ).padStart(2, "0")}h${String(cible.getMinutes()).padStart(2, "0")}`,
+      slug: `${modele.slug}-${dateISOCourteParis(cible)}-${(() => {
+        const { heures, minutes } = heureMinuteParis(cible);
+        return `${String(heures).padStart(2, "0")}h${String(minutes).padStart(2, "0")}`;
+      })()}`,
       description: modele.description,
       lieu: modele.lieu,
       capacite_max: modele.capacite_max,

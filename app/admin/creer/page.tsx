@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uploaderImageEvenement } from "@/lib/stockage";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
+import { datetimeLocalVersISO } from "@/lib/fuseau";
 
 function creerSlug(titre: string) {
   return titre
@@ -101,7 +102,7 @@ export default function PageCreerEvenement() {
             })
           : await supabase.from("events").insert({
               ...donneesCommunes,
-              date_debut: dateDebut,
+              date_debut: datetimeLocalVersISO(dateDebut),
             });
 
       if (error) throw error;
