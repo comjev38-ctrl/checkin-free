@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ChampMotDePasse from "@/components/champ-mot-de-passe";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 function PageCompteInterne() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const changementObligatoire = searchParams.get("mdp_provisoire") === "1";
 
   const [email, setEmail] = useState("");
@@ -93,20 +92,33 @@ function PageCompteInterne() {
     }
 
     // Lève l'obligation de changement, s'il y en avait une.
-    await supabase
+    const { error: erreurLevee } = await supabase
       .from("admins")
       .update({ mot_de_passe_provisoire: false })
       .eq("email", email);
 
     setEnCoursMdp(false);
+
+    if (erreurLevee) {
+      // Le mot de passe EST bien changé (l'appel précédent a réussi),
+      // mais l'obligation n'a pas pu être levée en base : on le dit
+      // clairement plutôt que de laisser une redirection en boucle.
+      setErreurMdp(
+        `Ton mot de passe est bien enregistré, mais une erreur empêche de lever l'obligation de le changer : ${erreurLevee.message}. Réessaie, ou contacte un autre membre admin si ça persiste.`
+      );
+      return;
+    }
+
     setMotDePasse("");
     setConfirmation("");
 
     if (changementObligatoire) {
       setRedirectionEnCours(true);
+      // Navigation complète (pas le routeur client) : on est sûr que
+      // le middleware relit un état à jour depuis zéro, sans aucun
+      // risque de rester bloqué sur une page mise en cache.
       setTimeout(() => {
-        router.push("/admin");
-        router.refresh();
+        window.location.href = "/admin";
       }, 1400);
     } else {
       setSuccesMdp(true);
