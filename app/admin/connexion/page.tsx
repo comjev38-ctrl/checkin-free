@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/logo";
+import ChampMotDePasse from "@/components/champ-mot-de-passe";
 
 function FormulaireConnexion() {
   const searchParams = useSearchParams();
@@ -164,13 +165,12 @@ function FormulaireConnexion() {
           placeholder="ton@email.fr"
           className="w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
         />
-        <input
-          type="password"
+        <ChampMotDePasse
           required
           value={motDePasse}
-          onChange={(e) => setMotDePasse(e.target.value)}
+          onChange={setMotDePasse}
           placeholder="Mot de passe"
-          className="w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          autoComplete="current-password"
         />
         {erreur && <p className="text-sm text-rose">{erreur}</p>}
         <button

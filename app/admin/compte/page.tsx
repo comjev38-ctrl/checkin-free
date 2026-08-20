@@ -3,6 +3,8 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import ChampMotDePasse from "@/components/champ-mot-de-passe";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
 function PageCompteInterne() {
   const searchParams = useSearchParams();
@@ -22,6 +24,7 @@ function PageCompteInterne() {
   const [erreurMdp, setErreurMdp] = useState<string | null>(null);
   const [succesMdp, setSuccesMdp] = useState(false);
   const [enCoursMdp, setEnCoursMdp] = useState(false);
+  const [redirectionEnCours, setRedirectionEnCours] = useState(false);
 
   useEffect(() => {
     async function charger() {
@@ -100,11 +103,31 @@ function PageCompteInterne() {
     setConfirmation("");
 
     if (changementObligatoire) {
-      router.push("/admin");
-      router.refresh();
+      setRedirectionEnCours(true);
+      setTimeout(() => {
+        router.push("/admin");
+        router.refresh();
+      }, 1400);
     } else {
       setSuccesMdp(true);
     }
+  }
+
+  if (redirectionEnCours) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-paper px-6">
+        <div className="flex flex-col items-center text-center">
+          <CheckCircle2 size={40} className="text-emerald" />
+          <p className="mt-4 font-display text-xl italic text-ink">
+            Mot de passe enregistré
+          </p>
+          <p className="mt-2 flex items-center gap-2 text-sm text-stone">
+            <Loader2 size={16} className="animate-spin" />
+            Redirection vers l&apos;espace organisateur…
+          </p>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -184,27 +207,29 @@ function PageCompteInterne() {
               <label className="block font-mono text-xs uppercase text-stone">
                 Nouveau mot de passe
               </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
-                className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-              />
+              <div className="mt-1">
+                <ChampMotDePasse
+                  required
+                  minLength={8}
+                  value={motDePasse}
+                  onChange={setMotDePasse}
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
             <div>
               <label className="block font-mono text-xs uppercase text-stone">
                 Confirmer le mot de passe
               </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={confirmation}
-                onChange={(e) => setConfirmation(e.target.value)}
-                className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
-              />
+              <div className="mt-1">
+                <ChampMotDePasse
+                  required
+                  minLength={8}
+                  value={confirmation}
+                  onChange={setConfirmation}
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
 
             {erreurMdp && <p className="text-sm text-rose">{erreurMdp}</p>}

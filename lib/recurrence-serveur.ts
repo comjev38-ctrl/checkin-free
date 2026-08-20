@@ -68,19 +68,62 @@ export async function obtenirOuCreerOccurrence(modele: EvenementModele) {
     .select("*")
     .single();
 
-  // Cas rare : deux requêtes concurrentes ont tenté de créer la même
-  // séance en même temps (l'index unique a rejeté la deuxième).
-  // On relit simplement la ligne qui a gagné la course.
-  if (error) {
-    const { data: apresConflit } = await supabase
-      .from("events")
-      .select("*")
-      .eq("parent_event_id", modele.id)
-      .eq("date_debut", cibleISO)
-      .maybeSingle();
-    if (apresConflit) return apresConflit;
-    throw error;
+  if (!error) return creee;
+
+  // Deux cas possibles ici, tous les deux gérés sans jamais faire
+  // planter la page publique :
+  //
+  // 1) Course concurrente : une autre requête a créé la même séance
+  //    (même parent + même date_debut exacte) entre-temps.
+  const { data: parDate } = await supabase
+    .from("events")
+    .select("*")
+    .eq("parent_event_id", modele.id)
+    .eq("date_debut", cibleISO)
+    .maybeSingle();
+  if (parDate) return parDate;
+
+  // 2) Collision de slug : une séance existante (créée par ex. avant
+  //    un correctif de calcul d'heure) porte déjà exactement ce nom
+  //    d'URL, même si sa date_debut exacte diffère. On la réutilise
+  //    plutôt que d'échouer — un admin pourra toujours corriger les
+  //    horaires depuis "Modifier" si besoin.
+  const slugCible = `${modele.slug}-${dateISOCourteParis(cible)}-${(() => {
+    const { heures, minutes } = heureMinuteParis(cible);
+    return `${String(heures).padStart(2, "0")}h${String(minutes).padStart(2, "0")}`;
+  })()}`;
+  const { data: parSlug } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", slugCible)
+    .maybeSingle();
+  if (parSlug) return parSlug;
+
+  // 3) Autre cause inattendue : on retente une seule fois avec un
+  //    suffixe garanti unique plutôt que de laisser planter la page.
+  const { data: repli, error: erreurRepli } = await supabase
+    .from("events")
+    .insert({
+      parent_event_id: modele.id,
+      admin_id: modele.admin_id,
+      titre: modele.titre,
+      slug: `${slugCible}-${Math.random().toString(36).slice(2, 6)}`,
+      description: modele.description,
+      lieu: modele.lieu,
+      capacite_max: modele.capacite_max,
+      logo_url: modele.logo_url,
+      image_url: modele.image_url,
+      statut: "publie",
+      date_debut: cibleISO,
+      heure_fin: modele.heure_fin,
+    })
+    .select("*")
+    .single();
+
+  if (erreurRepli) {
+    console.error("Création de séance impossible même après repli :", error, erreurRepli);
+    throw erreurRepli;
   }
 
-  return creee;
+  return repli;
 }
