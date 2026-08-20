@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Logo from "@/components/logo";
 
 function FormulaireConnexion() {
   const searchParams = useSearchParams();
@@ -89,6 +90,10 @@ function FormulaireConnexion() {
   if (modeOubli) {
     return (
       <div className="w-full max-w-sm">
+        <div className="mb-8 flex items-center gap-2.5">
+          <Logo size={32} />
+          <span className="font-display text-xl italic text-ink">CheckIn Free</span>
+        </div>
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
           Espace organisateur
         </p>
@@ -139,6 +144,10 @@ function FormulaireConnexion() {
 
   return (
     <div className="w-full max-w-sm">
+      <div className="mb-8 flex items-center gap-2.5">
+        <Logo size={32} />
+        <span className="font-display text-xl italic text-ink">CheckIn Free</span>
+      </div>
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
         Espace organisateur
       </p>

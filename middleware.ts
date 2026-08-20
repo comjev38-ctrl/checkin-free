@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
     // Authentifié ne suffit pas : il faut aussi être dans l'équipe.
     const { data: membre } = await supabase
       .from("admins")
-      .select("email, mot_de_passe_provisoire")
+      .select("email, mot_de_passe_provisoire, user_id")
       .eq("email", user.email)
       .maybeSingle();
 
@@ -53,6 +53,13 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/admin/connexion";
       url.searchParams.set("erreur", "non_autorise");
       return NextResponse.redirect(url);
+    }
+
+    // Rattrapage : une fiche invitée avant le correctif de liaison
+    // automatique peut être restée orpheline (user_id jamais rempli)
+    // malgré une connexion réussie. On la répare silencieusement ici.
+    if (!membre.user_id) {
+      await supabase.from("admins").update({ user_id: user.id }).eq("email", user.email);
     }
 
     // Mot de passe provisoire jamais changé : on bloque tout accès

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Logo from "@/components/logo";
 
 export default function EntetePublique({
   retour,
@@ -18,7 +19,8 @@ export default function EntetePublique({
             {retour.label}
           </Link>
         ) : (
-          <Link href="/" className="font-display text-lg italic text-ink">
+          <Link href="/" className="flex items-center gap-2 font-display text-lg italic text-ink">
+            <Logo size={26} />
             CheckIn Free
           </Link>
         )}

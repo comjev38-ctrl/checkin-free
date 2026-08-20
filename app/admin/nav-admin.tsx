@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Users, UserCircle, Home, LogOut, Menu, X } from "lucide-react";
 import BoutonDeconnexion from "./bouton-deconnexion";
+import Logo from "@/components/logo";
 
 const LIENS = [
   { href: "/admin", label: "Mes événements", icon: CalendarDays, exact: true },
@@ -36,7 +37,8 @@ export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
         >
           <Menu size={22} />
         </button>
-        <Link href="/" className="font-display text-lg italic text-ink">
+        <Link href="/" className="flex items-center gap-2 font-display text-lg italic text-ink">
+          <Logo size={24} />
           CheckIn Free
         </Link>
         <div className="w-10" />
@@ -58,7 +60,8 @@ export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/" className="font-display text-lg italic">
+          <Link href="/" className="flex items-center gap-2 font-display text-lg italic">
+            <Logo size={24} />
             CheckIn Free
           </Link>
           <button

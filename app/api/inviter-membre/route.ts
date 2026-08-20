@@ -35,13 +35,15 @@ export async function POST(req: Request) {
   // format du lien (code vs fragment) ni de risque réseau côté
   // envoi. Si le compte existe déjà (ex: ancien testeur), on lui
   // réinitialise simplement son mot de passe.
-  const { error: erreurCreation } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password: motDePasseProvisoire,
-    email_confirm: true,
-  });
+  const { data: creation, error: erreurCreation } =
+    await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: motDePasseProvisoire,
+      email_confirm: true,
+    });
 
   let compteOk = !erreurCreation;
+  let userId: string | null = creation?.user?.id ?? null;
 
   if (erreurCreation) {
     // Compte déjà existant : on retrouve son id et on force un
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
         { password: motDePasseProvisoire }
       );
       compteOk = !erreurMaj;
+      userId = existant.id;
     }
   }
 
@@ -70,10 +73,15 @@ export async function POST(req: Request) {
   }
 
   // Ajoute (ou met à jour) la fiche équipe avec l'obligation de
-  // changer ce mot de passe à la première connexion.
-  const { error: erreurUpsert } = await supabase
-    .from("admins")
-    .upsert({ email, mot_de_passe_provisoire: true }, { onConflict: "email" });
+  // changer ce mot de passe à la première connexion. On lie
+  // directement user_id ici : le compte existe déjà à ce stade
+  // (créé juste au-dessus), donc le déclencheur automatique côté
+  // base (prévu pour l'ancien flux where l'email arrivait AVANT le
+  // compte) ne se déclencherait jamais dans ce nouvel ordre.
+  const { error: erreurUpsert } = await supabase.from("admins").upsert(
+    { email, mot_de_passe_provisoire: true, user_id: userId },
+    { onConflict: "email" }
+  );
 
   if (erreurUpsert) {
     return NextResponse.json({ message: erreurUpsert.message }, { status: 400 });
