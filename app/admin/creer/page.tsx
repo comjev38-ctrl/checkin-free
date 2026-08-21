@@ -33,6 +33,7 @@ export default function PageCreerEvenement() {
   const [description, setDescription] = useState("");
   const [lieu, setLieu] = useState("");
   const [dateDebut, setDateDebut] = useState("");
+  const [heureFinPonctuel, setHeureFinPonctuel] = useState("");
   const [jourSemaine, setJourSemaine] = useState(4); // jeudi par défaut
   const [heureDebut, setHeureDebut] = useState("17:00");
   const [heureFin, setHeureFin] = useState("19:00");
@@ -103,6 +104,7 @@ export default function PageCreerEvenement() {
           : await supabase.from("events").insert({
               ...donneesCommunes,
               date_debut: datetimeLocalVersISO(dateDebut),
+              heure_fin: heureFinPonctuel || null,
             });
 
       if (error) throw error;
@@ -188,7 +190,7 @@ export default function PageCreerEvenement() {
           </div>
 
           {type === "ponctuel" ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div>
                 <label className="block font-mono text-xs uppercase text-stone">
                   Date et heure
@@ -198,6 +200,17 @@ export default function PageCreerEvenement() {
                   required
                   value={dateDebut}
                   onChange={(e) => setDateDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Heure de fin
+                </label>
+                <input
+                  type="time"
+                  value={heureFinPonctuel}
+                  onChange={(e) => setHeureFinPonctuel(e.target.value)}
                   className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
                 />
               </div>

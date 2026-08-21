@@ -149,6 +149,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             jour_semaine: null,
             heure_debut: null,
             date_debut: datetimeLocalVersISO(dateDebut),
+            heure_fin: heureFin || null,
           };
 
       const { error } = await supabase
@@ -270,7 +271,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           </div>
 
           {type === "ponctuel" ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div>
                 <label className="block font-mono text-xs uppercase text-stone">
                   Date et heure
@@ -280,6 +281,17 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   required
                   value={dateDebut}
                   onChange={(e) => setDateDebut(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                />
+              </div>
+              <div>
+                <label className="block font-mono text-xs uppercase text-stone">
+                  Heure de fin
+                </label>
+                <input
+                  type="time"
+                  value={heureFin}
+                  onChange={(e) => setHeureFin(e.target.value)}
                   className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
                 />
               </div>

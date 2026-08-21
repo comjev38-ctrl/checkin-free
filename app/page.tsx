@@ -82,6 +82,7 @@ export default async function PageAccueil() {
 
 function CarteEvenement({ event }: { event: any }) {
   const JOURS = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+  const heureFinAffichee = event.heure_fin ? event.heure_fin.slice(0, 5) : null;
 
   const date =
     event.recurrence === "hebdomadaire"
@@ -90,21 +91,28 @@ function CarteEvenement({ event }: { event: any }) {
             event.jour_semaine,
             event.heure_debut
           );
-          return `Tous les ${JOURS[event.jour_semaine]}, ${event.heure_debut?.slice(
-            0,
-            5
-          )} · prochaine séance le ${prochaine.toLocaleDateString("fr-FR", {
+          const plage = heureFinAffichee
+            ? `${event.heure_debut?.slice(0, 5)}–${heureFinAffichee}`
+            : event.heure_debut?.slice(0, 5);
+          return `Tous les ${JOURS[event.jour_semaine]}, ${plage} · prochaine séance le ${prochaine.toLocaleDateString(
+            "fr-FR",
+            { day: "numeric", month: "long" }
+          )}`;
+        })()
+      : (() => {
+          const base = new Date(event.date_debut).toLocaleString("fr-FR", {
+            weekday: "short",
             day: "numeric",
             month: "long",
-          })}`;
-        })()
-      : new Date(event.date_debut).toLocaleString("fr-FR", {
-          weekday: "short",
-          day: "numeric",
-          month: "long",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          return heureFinAffichee ? `${base} – ${heureFinAffichee}` : base;
+        })();
+
+  const nbBillets = event.tickets?.[0]?.count ?? 0;
+  const placesRestantes =
+    event.capacite_max != null ? Math.max(0, event.capacite_max - nbBillets) : null;
 
   return (
     <Link
@@ -143,6 +151,15 @@ function CarteEvenement({ event }: { event: any }) {
         </h3>
         {event.lieu && (
           <p className="mt-1 text-sm text-stone">{event.lieu}</p>
+        )}
+        {placesRestantes != null && (
+          <p className="mt-1 text-sm text-stone">
+            {placesRestantes > 0
+              ? `${placesRestantes} place${placesRestantes > 1 ? "s" : ""} restante${
+                  placesRestantes > 1 ? "s" : ""
+                } sur ${event.capacite_max}`
+              : "Complet"}
+          </p>
         )}
         <span className="mt-auto pt-4 font-mono text-xs uppercase tracking-wide text-ink underline-offset-4 group-hover:underline">
           Voir l&apos;événement →

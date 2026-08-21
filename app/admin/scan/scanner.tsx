@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Resultat = {
@@ -81,12 +82,22 @@ export default function Scanner({ eventId }: { eventId: string }) {
   return (
     <main className="flex min-h-screen flex-col bg-ink px-6 py-8 text-paper">
       <div className="mx-auto w-full max-w-sm flex-1">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
-          Contrôle d&apos;accès
-        </p>
-        <h1 className="mt-1 font-display text-2xl italic">
-          Scanner les billets
-        </h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+              Contrôle d&apos;accès
+            </p>
+            <h1 className="mt-1 font-display text-2xl italic">
+              Scanner les billets
+            </h1>
+          </div>
+          <Link
+            href={`/admin/stats/${eventId}`}
+            className="rounded-md border border-white/20 px-3 py-2 text-xs text-paper/70 hover:bg-white/10 hover:text-paper"
+          >
+            Stats →
+          </Link>
+        </div>
 
         {!modeManuel ? (
           <div className="mt-6 overflow-hidden rounded-lg" id="lecteur-qr" />
