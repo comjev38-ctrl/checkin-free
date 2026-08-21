@@ -9,7 +9,15 @@ type Resultat = {
   message: string;
 };
 
-export default function Scanner({ eventId }: { eventId: string }) {
+export default function Scanner({
+  eventId,
+  eventTitre,
+  eventDate,
+}: {
+  eventId: string;
+  eventTitre?: string | null;
+  eventDate?: string | null;
+}) {
   const [modeManuel, setModeManuel] = useState(false);
   const [codeManuel, setCodeManuel] = useState("");
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -88,8 +96,19 @@ export default function Scanner({ eventId }: { eventId: string }) {
               Contrôle d&apos;accès
             </p>
             <h1 className="mt-1 font-display text-2xl italic">
-              Scanner les billets
+              {eventTitre ?? "Scanner les billets"}
             </h1>
+            {eventDate && (
+              <p className="mt-0.5 text-xs text-paper/50">
+                {new Date(eventDate).toLocaleDateString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
           </div>
           <Link
             href={`/admin/stats/${eventId}`}

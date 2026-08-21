@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uploaderImageEvenement } from "@/lib/stockage";
 import { datetimeLocalVersISO } from "@/lib/fuseau";
+import LabelChamp from "@/components/label-champ";
 
 type Event = {
   id: string;
@@ -193,7 +194,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
       )}
 
       <div>
-        <label className="block font-mono text-xs uppercase text-stone">Titre</label>
+        <LabelChamp>Titre</LabelChamp>
         <input
           required
           value={titre}
@@ -206,7 +207,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
       </div>
 
       <div>
-        <label className="block font-mono text-xs uppercase text-stone">Description</label>
+        <LabelChamp obligatoire={false}>Description</LabelChamp>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -218,9 +219,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
       {estUneSeance ? (
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block font-mono text-xs uppercase text-stone">
-              Date de cette séance
-            </label>
+            <LabelChamp obligatoire={false}>Date de cette séance</LabelChamp>
             <p className="mt-1 rounded-md border border-line bg-line/20 px-3 py-2 text-ink">
               {new Date(event.date_debut).toLocaleString("fr-FR", {
                 dateStyle: "long",
@@ -229,9 +228,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             </p>
           </div>
           <div>
-            <label className="block font-mono text-xs uppercase text-stone">
-              Capacité max
-            </label>
+            <LabelChamp obligatoire={false}>Capacité max</LabelChamp>
             <input
               type="number"
               min={1}
@@ -273,9 +270,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           {type === "ponctuel" ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Date et heure
-                </label>
+                <LabelChamp>Date et heure</LabelChamp>
                 <input
                   type="datetime-local"
                   required
@@ -285,9 +280,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                 />
               </div>
               <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Heure de fin
-                </label>
+                <LabelChamp obligatoire={false}>Heure de fin</LabelChamp>
                 <input
                   type="time"
                   value={heureFin}
@@ -296,9 +289,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                 />
               </div>
               <div>
-                <label className="block font-mono text-xs uppercase text-stone">
-                  Capacité max
-                </label>
+                <LabelChamp obligatoire={false}>Capacité max</LabelChamp>
                 <input
                   type="number"
                   min={1}
@@ -313,9 +304,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Jour
-                  </label>
+                  <LabelChamp>Jour</LabelChamp>
                   <select
                     value={jourSemaine}
                     onChange={(e) => setJourSemaine(Number(e.target.value))}
@@ -329,9 +318,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Début
-                  </label>
+                  <LabelChamp>Début</LabelChamp>
                   <input
                     type="time"
                     required
@@ -341,9 +328,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Fin
-                  </label>
+                  <LabelChamp obligatoire={false}>Fin</LabelChamp>
                   <input
                     type="time"
                     value={heureFin}
@@ -352,9 +337,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-xs uppercase text-stone">
-                    Capacité / séance
-                  </label>
+                  <LabelChamp obligatoire={false}>Capacité / séance</LabelChamp>
                   <input
                     type="number"
                     min={1}
@@ -376,7 +359,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
       )}
 
       <div>
-        <label className="block font-mono text-xs uppercase text-stone">Lieu</label>
+        <LabelChamp obligatoire={false}>Lieu</LabelChamp>
         <input
           value={lieu}
           onChange={(e) => setLieu(e.target.value)}

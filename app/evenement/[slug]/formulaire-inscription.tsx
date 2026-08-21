@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import LabelChamp from "@/components/label-champ";
 
 export default function FormulaireInscription({
   eventId,
@@ -47,9 +48,7 @@ export default function FormulaireInscription({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="prenom" className="block font-mono text-xs uppercase text-stone">
-            Prénom
-          </label>
+          <LabelChamp htmlFor="prenom">Prénom</LabelChamp>
           <input
             id="prenom"
             required
@@ -60,9 +59,7 @@ export default function FormulaireInscription({
           />
         </div>
         <div>
-          <label htmlFor="nom" className="block font-mono text-xs uppercase text-stone">
-            Nom
-          </label>
+          <LabelChamp htmlFor="nom">Nom</LabelChamp>
           <input
             id="nom"
             required
@@ -75,9 +72,7 @@ export default function FormulaireInscription({
       </div>
 
       <div>
-        <label htmlFor="email" className="block font-mono text-xs uppercase text-stone">
-          Email (pour recevoir le billet)
-        </label>
+        <LabelChamp htmlFor="email">Email (pour recevoir le billet)</LabelChamp>
         <input
           id="email"
           type="email"

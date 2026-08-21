@@ -40,6 +40,14 @@ export default function TableauInscrits({
     return [t.prenom, t.nom].filter(Boolean).join(" ");
   }
 
+  function formaterDateCSV(d: Date) {
+    if (isNaN(d.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}`;
+  }
+
   function heureScan(t: Ticket) {
     const scan = t.checkins?.[0]?.scanned_at;
     return scan
@@ -56,8 +64,10 @@ export default function TableauInscrits({
       t.nom,
       t.email ?? "",
       t.statut === "utilise" ? "Arrivé" : "Inscrit",
-      new Date(t.created_at).toLocaleString("fr-FR"),
-      heureScan(t) ?? "",
+      t.created_at ? formaterDateCSV(new Date(t.created_at)) : "",
+      t.checkins?.[0]?.scanned_at
+        ? formaterDateCSV(new Date(t.checkins[0].scanned_at))
+        : "",
     ]);
 
     // Point-virgule : compatible Excel en français (sinon tout finit

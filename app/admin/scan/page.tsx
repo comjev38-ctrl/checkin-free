@@ -1,6 +1,7 @@
+import { createClient } from "@/lib/supabase/server";
 import Scanner from "./scanner";
 
-export default function PageScan({
+export default async function PageScan({
   searchParams,
 }: {
   searchParams: { event?: string };
@@ -16,5 +17,18 @@ export default function PageScan({
     );
   }
 
-  return <Scanner eventId={searchParams.event} />;
+  const supabase = createClient();
+  const { data: event } = await supabase
+    .from("events")
+    .select("titre, date_debut")
+    .eq("id", searchParams.event)
+    .single();
+
+  return (
+    <Scanner
+      eventId={searchParams.event}
+      eventTitre={event?.titre ?? null}
+      eventDate={event?.date_debut ?? null}
+    />
+  );
 }
