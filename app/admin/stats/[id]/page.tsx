@@ -24,7 +24,7 @@ export default async function PageStatsEvenement({
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
               Stats en direct
             </p>
             <h1 className="mt-1 font-display text-3xl italic text-ink">

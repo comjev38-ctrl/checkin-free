@@ -1,13 +1,23 @@
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, MoreHorizontal, Ticket, Users2 } from "lucide-react";
+import { Plus, MoreHorizontal, Ticket, Users2, PartyPopper } from "lucide-react";
 import BoutonSupprimerEvenement from "./bouton-supprimer-evenement";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 
 export const revalidate = 0;
 
 const JOURS = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+
+// Rotation de la palette de tuiles (direction artistique du dashboard
+// de référence) pour les événements sans bannière — chaque carte
+// prend la couleur suivante dans le cycle.
+const TUILES = [
+  { bg: "bg-violet", texte: "text-violet" },
+  { bg: "bg-orange", texte: "text-orange" },
+  { bg: "bg-bleu", texte: "text-bleu" },
+  { bg: "bg-fuchsia", texte: "text-fuchsia" },
+];
 
 export default async function TableauDeBordAdmin() {
   const supabase = createClient();
@@ -71,7 +81,7 @@ export default async function TableauDeBordAdmin() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
               Espace organisateur
             </p>
             <h1 className="mt-1 font-display text-3xl italic text-ink">
@@ -80,7 +90,7 @@ export default async function TableauDeBordAdmin() {
           </div>
           <Link
             href="/admin/creer"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-paper hover:bg-ink/90"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-violet px-4 py-2.5 text-sm font-medium text-paper hover:bg-violet/90"
           >
             <Plus size={16} />
             Nouvel événement
@@ -89,13 +99,14 @@ export default async function TableauDeBordAdmin() {
 
         {evenementsAvecSeance.length ? (
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {evenementsAvecSeance.map((event: any) => {
+            {evenementsAvecSeance.map((event: any, index: number) => {
               const recurrent = event.recurrence === "hebdomadaire";
               const seance = event.seanceActuelle;
               const idPourActions = recurrent ? seance?.id : event.id;
               const nbBillets = recurrent
                 ? seance?.nbBillets ?? 0
                 : event.tickets?.[0]?.count ?? 0;
+              const tuile = TUILES[index % TUILES.length];
 
               return (
                 <div
@@ -103,7 +114,11 @@ export default async function TableauDeBordAdmin() {
                   className="flex flex-col rounded-xl border border-line bg-white"
                 >
                   {/* Vignette */}
-                  <div className="relative h-32 w-full overflow-hidden rounded-t-xl bg-ink/5">
+                  <div
+                    className={`relative h-32 w-full overflow-hidden rounded-t-xl ${
+                      event.image_url ? "bg-ink/5" : tuile.bg
+                    }`}
+                  >
                     {event.image_url ? (
                       <Image
                         src={event.image_url}
@@ -113,9 +128,9 @@ export default async function TableauDeBordAdmin() {
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <span className="font-display text-3xl italic text-ink/20">
-                          {event.titre.charAt(0)}
-                        </span>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+                          <PartyPopper size={26} className={tuile.texte} strokeWidth={1.75} />
+                        </div>
                       </div>
                     )}
                     <span
@@ -181,7 +196,7 @@ export default async function TableauDeBordAdmin() {
                       {idPourActions && (
                         <Link
                           href={`/admin/stats/${idPourActions}`}
-                          className="flex-1 rounded-md bg-ink px-3 py-2 text-center text-sm text-paper hover:bg-ink/90"
+                          className="flex-1 rounded-md bg-violet px-3 py-2 text-center text-sm text-paper hover:bg-violet/90"
                         >
                           Administrer
                         </Link>

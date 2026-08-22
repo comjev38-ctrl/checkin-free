@@ -56,7 +56,7 @@ export function FormulaireInviter() {
       <button
         type="submit"
         disabled={enCours}
-        className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+        className="rounded-md bg-violet px-4 py-2 text-sm font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
       >
         {enCours ? "…" : "Inviter"}
       </button>

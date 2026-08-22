@@ -411,7 +411,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         <button
           type="submit"
           disabled={enCours}
-          className="flex-1 rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+          className="flex-1 rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
         >
           {enCours ? "Enregistrement…" : "Enregistrer les modifications"}
         </button>

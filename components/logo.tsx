@@ -18,7 +18,7 @@ export default function Logo({
         width="64"
         height="64"
         rx="16"
-        fill="#16213E"
+        fill="#7B7FE0"
         stroke="#FAFAF8"
         strokeOpacity="0.15"
         strokeWidth="1.5"

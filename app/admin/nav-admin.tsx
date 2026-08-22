@@ -89,7 +89,7 @@ export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
                 href={href}
                 className={`flex items-center gap-3 rounded-md px-3 py-3 text-sm transition-colors ${
                   actif
-                    ? "bg-paper/10 text-paper"
+                    ? "bg-violet text-paper"
                     : "text-paper/60 hover:bg-paper/10 hover:text-paper"
                 }`}
               >

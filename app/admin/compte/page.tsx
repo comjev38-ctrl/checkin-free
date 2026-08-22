@@ -154,7 +154,7 @@ function PageCompteInterne() {
 
         {!changementObligatoire && (
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
               Mon compte
             </p>
             <h1 className="mt-1 font-display text-3xl italic text-ink">
@@ -195,7 +195,7 @@ function PageCompteInterne() {
                 <button
                   type="submit"
                   disabled={enCoursProfil}
-                  className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+                  className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
                 >
                   {enCoursProfil ? "Enregistrement…" : "Enregistrer mon profil"}
                 </button>
@@ -255,7 +255,7 @@ function PageCompteInterne() {
             <button
               type="submit"
               disabled={enCoursMdp}
-              className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+              className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
             >
               {enCoursMdp ? "Enregistrement…" : "Enregistrer le mot de passe"}
             </button>

@@ -95,7 +95,7 @@ function FormulaireConnexion() {
           <Logo size={32} />
           <span className="font-display text-xl italic text-ink">CheckIn Free</span>
         </div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
           Espace organisateur
         </p>
         <h1 className="mt-2 font-display text-3xl italic text-ink">
@@ -121,7 +121,7 @@ function FormulaireConnexion() {
             <button
               type="submit"
               disabled={enCours}
-              className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+              className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
             >
               {enCours ? "Envoi…" : "Recevoir un lien de réinitialisation"}
             </button>
@@ -149,7 +149,7 @@ function FormulaireConnexion() {
         <Logo size={32} />
         <span className="font-display text-xl italic text-ink">CheckIn Free</span>
       </div>
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+      <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
         Espace organisateur
       </p>
       <h1 className="mt-2 font-display text-3xl italic text-ink">
@@ -176,7 +176,7 @@ function FormulaireConnexion() {
         <button
           type="submit"
           disabled={enCours}
-          className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+          className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
         >
           {enCours ? "Connexion…" : "Se connecter"}
         </button>

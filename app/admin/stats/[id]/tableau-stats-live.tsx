@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { Ticket, Users2 } from "lucide-react";
 
 type Event = {
   id: string;
@@ -220,9 +221,14 @@ export default function TableauStatsLive({ event }: { event: Event }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-line bg-white p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
-            Billets émis
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet/15">
+              <Ticket size={15} className="text-violet" />
+            </span>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+              Billets émis
+            </p>
+          </div>
           <p className="mt-2 font-display text-4xl italic text-ink">
             {nbBillets ?? "…"}
             {event.capacite_max && (
@@ -232,7 +238,7 @@ export default function TableauStatsLive({ event }: { event: Event }) {
           {tauxRemplissage != null && (
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-line">
               <div
-                className="h-full bg-ink transition-all duration-500"
+                className="h-full bg-violet transition-all duration-500"
                 style={{ width: `${tauxRemplissage}%` }}
               />
             </div>
@@ -240,9 +246,14 @@ export default function TableauStatsLive({ event }: { event: Event }) {
         </div>
 
         <div className="rounded-xl border border-line bg-white p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
-            Présents (scannés)
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald/15">
+              <Users2 size={15} className="text-emerald" />
+            </span>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+              Présents (scannés)
+            </p>
+          </div>
           <p className="mt-2 font-display text-4xl italic text-ink">
             {nbCheckins ?? "…"}
             <span className="text-lg text-stone"> ({tauxPresence}%)</span>

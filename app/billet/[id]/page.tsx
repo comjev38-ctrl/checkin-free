@@ -37,7 +37,7 @@ export default async function PageBillet({
       />
       <div className="flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        <p className="mb-6 text-center font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="mb-6 text-center font-mono text-xs uppercase tracking-[0.2em] text-violet">
           Billet confirmé
         </p>
 

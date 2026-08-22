@@ -36,7 +36,7 @@ export default async function PageHistoriqueSerie({
         >
           ← Mes événements
         </Link>
-        <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-violet">
           Historique des séances
         </p>
         <h1 className="mt-1 font-display text-3xl italic text-ink">

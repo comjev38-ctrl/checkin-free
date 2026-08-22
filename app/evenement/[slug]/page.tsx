@@ -103,7 +103,7 @@ export default async function PageEvenement({
       )}
 
       <div className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
           {event.parent_event_id
             ? "Rendez-vous hebdomadaire · cette semaine"
             : event.statut === "publie"
@@ -114,7 +114,7 @@ export default async function PageEvenement({
           {event.titre}
         </h1>
 
-        <dl className="mt-6 space-y-2 border-l-2 border-line pl-4 text-ink">
+        <dl className="mt-6 space-y-2 border-l-2 border-violet/40 pl-4 text-ink">
           <div className="flex gap-2">
             <dt className="w-20 shrink-0 font-mono text-xs uppercase text-stone">
               Quand

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Ticket as TicketIcon, UserCheck, Clock } from "lucide-react";
 
 type Ticket = {
   id: string;
@@ -119,16 +120,25 @@ export default function TableauInscrits({
     <div className="mt-8">
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border border-line bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-violet/15">
+            <TicketIcon size={13} className="text-violet" />
+          </span>
           <p className="font-mono text-[10px] uppercase text-stone">Inscrits</p>
           <p className="mt-1 font-display text-2xl italic text-ink">
             {billetsActifs.length}
           </p>
         </div>
         <div className="rounded-lg border border-line bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald/15">
+            <UserCheck size={13} className="text-emerald" />
+          </span>
           <p className="font-mono text-[10px] uppercase text-stone">Arrivés</p>
           <p className="mt-1 font-display text-2xl italic text-emerald">{nbArrives}</p>
         </div>
         <div className="rounded-lg border border-line bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-orange/15">
+            <Clock size={13} className="text-orange" />
+          </span>
           <p className="font-mono text-[10px] uppercase text-stone">En attente</p>
           <p className="mt-1 font-display text-2xl italic text-ink">
             {billetsActifs.length - nbArrives}

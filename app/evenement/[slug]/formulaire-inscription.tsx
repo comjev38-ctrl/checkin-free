@@ -89,7 +89,7 @@ export default function FormulaireInscription({
       <button
         type="submit"
         disabled={envoiEnCours}
-        className="w-full rounded-md bg-ink px-5 py-3 font-medium text-paper transition hover:bg-ink/90 disabled:opacity-50"
+        className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper transition hover:bg-violet/90 disabled:opacity-50"
       >
         {envoiEnCours ? "Génération du billet…" : "Obtenir mon billet"}
       </button>

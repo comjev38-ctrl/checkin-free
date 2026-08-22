@@ -92,7 +92,7 @@ export default function Scanner({
       <div className="mx-auto w-full max-w-sm flex-1">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
               Contrôle d&apos;accès
             </p>
             <h1 className="mt-1 font-display text-2xl italic">

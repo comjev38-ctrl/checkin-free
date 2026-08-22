@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
 import EntetePublique from "@/components/entete-publique";
+import { PartyPopper } from "lucide-react";
 
 export const revalidate = 0;
 
@@ -31,7 +32,7 @@ export default async function PageAccueil() {
       <EntetePublique />
 
       <section className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
           Billetterie associative
         </p>
         <h1 className="mt-3 max-w-2xl font-display text-4xl italic leading-tight text-ink sm:text-5xl">
@@ -50,8 +51,8 @@ export default async function PageAccueil() {
               À venir
             </h2>
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
-              {evenementsAVenir.map((event) => (
-                <CarteEvenement key={event.id} event={event} />
+              {evenementsAVenir.map((event, i) => (
+                <CarteEvenement key={event.id} event={event} index={i} />
               ))}
             </div>
           </>
@@ -69,8 +70,8 @@ export default async function PageAccueil() {
               Passés
             </h2>
             <div className="mt-4 grid gap-5 opacity-60 sm:grid-cols-2">
-              {evenementsPasses.map((event) => (
-                <CarteEvenement key={event.id} event={event} />
+              {evenementsPasses.map((event, i) => (
+                <CarteEvenement key={event.id} event={event} index={i} />
               ))}
             </div>
           </>
@@ -80,7 +81,15 @@ export default async function PageAccueil() {
   );
 }
 
-function CarteEvenement({ event }: { event: any }) {
+const TUILES = [
+  { bg: "bg-violet", texte: "text-violet" },
+  { bg: "bg-orange", texte: "text-orange" },
+  { bg: "bg-bleu", texte: "text-bleu" },
+  { bg: "bg-fuchsia", texte: "text-fuchsia" },
+];
+
+function CarteEvenement({ event, index }: { event: any; index: number }) {
+  const tuile = TUILES[index % TUILES.length];
   const JOURS = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
   const heureFinAffichee = event.heure_fin ? event.heure_fin.slice(0, 5) : null;
 
@@ -130,10 +139,10 @@ function CarteEvenement({ event }: { event: any }) {
             className="object-cover blur-sm"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-ink/5">
-            <span className="font-display text-3xl italic text-ink/20">
-              {event.titre.charAt(0)}
-            </span>
+          <div className={`flex h-full w-full items-center justify-center ${tuile.bg}`}>
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
+              <PartyPopper size={26} className={tuile.texte} strokeWidth={1.75} />
+            </div>
           </div>
         )}
         {event.logo_url && (
@@ -161,7 +170,7 @@ function CarteEvenement({ event }: { event: any }) {
               : "Complet"}
           </p>
         )}
-        <span className="mt-auto pt-4 font-mono text-xs uppercase tracking-wide text-ink underline-offset-4 group-hover:underline">
+        <span className="mt-auto pt-4 font-mono text-xs uppercase tracking-wide text-violet underline-offset-4 group-hover:underline">
           Voir l&apos;événement →
         </span>
       </div>

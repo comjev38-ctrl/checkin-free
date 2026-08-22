@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -12,6 +12,14 @@ const config: Config = {
         stone: "#6B7280",
         line: "#E3DFD5",
         rose: "#B3423C",
+        // Palette de tuiles colorées (direction artistique du dashboard
+        // de référence) : utilisée pour les cartes d'événements et les
+        // médaillons d'icônes, en rotation. Distincte de amber/rose qui
+        // gardent leur rôle sémantique (avertissement/erreur).
+        violet: "#7B7FE0",
+        orange: "#F5A623",
+        bleu: "#4A9FE8",
+        fuchsia: "#C15FD1",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "serif"],

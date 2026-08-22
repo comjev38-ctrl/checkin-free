@@ -123,7 +123,7 @@ export default function PageCreerEvenement() {
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-xl">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
           Nouvel événement
         </p>
         <h1 className="mt-1 font-display text-3xl italic text-ink">
@@ -349,7 +349,7 @@ export default function PageCreerEvenement() {
             <button
               onClick={(e) => creerEtPublier(e, "publie")}
               disabled={enCours}
-              className="flex-1 rounded-md bg-ink px-5 py-3 font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
+              className="flex-1 rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
             >
               {enCours ? "Envoi…" : "Publier la page"}
             </button>
