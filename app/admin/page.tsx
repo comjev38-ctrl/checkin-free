@@ -24,15 +24,42 @@ export default async function TableauDeBordAdmin() {
 
   // Pour chaque modèle récurrent, on résout (et crée si besoin) la
   // séance de la semaine, pour pouvoir proposer Scanner/Inscrits/Stats
-  // qui pointent directement dessus depuis le tableau de bord.
+  // qui pointent directement dessus depuis le tableau de bord — et on
+  // va chercher son nombre de billets à part, car la résolution de
+  // séance ne le renvoie pas (elle ne sélectionne pas cette relation).
   const evenementsAvecSeance = await Promise.all(
     (events ?? []).map(async (event: any) => {
       if (event.recurrence === "hebdomadaire") {
         try {
           const seance = await obtenirOuCreerOccurrence(event);
-          return { ...event, seanceActuelle: seance };
+          const { count } = await supabase
+            .from("tickets")
+            .select("*", { count: "exact", head: true })
+            .eq("event_id", seance.id)
+            .neq("statut", "annule");
+
+          // Total toutes séances confondues (pour le message de
+          // suppression, qui supprime tout l'historique en cascade).
+          const { data: seances } = await supabase
+            .from("events")
+            .select("id")
+            .eq("parent_event_id", event.id);
+          const idsSeances = (seances ?? []).map((s: { id: string }) => s.id);
+          const { count: totalToutesSeances } = idsSeances.length
+            ? await supabase
+                .from("tickets")
+                .select("*", { count: "exact", head: true })
+                .in("event_id", idsSeances)
+                .neq("statut", "annule")
+            : { count: 0 };
+
+          return {
+            ...event,
+            seanceActuelle: { ...seance, nbBillets: count ?? 0 },
+            totalBilletsSerie: totalToutesSeances ?? 0,
+          };
         } catch {
-          return { ...event, seanceActuelle: null };
+          return { ...event, seanceActuelle: null, totalBilletsSerie: 0 };
         }
       }
       return event;
@@ -67,7 +94,7 @@ export default async function TableauDeBordAdmin() {
               const seance = event.seanceActuelle;
               const idPourActions = recurrent ? seance?.id : event.id;
               const nbBillets = recurrent
-                ? seance?.tickets?.[0]?.count ?? 0
+                ? seance?.nbBillets ?? 0
                 : event.tickets?.[0]?.count ?? 0;
 
               return (
@@ -204,7 +231,11 @@ export default async function TableauDeBordAdmin() {
                           <BoutonSupprimerEvenement
                             eventId={event.id}
                             titre={event.titre}
-                            nbBillets={event.tickets?.[0]?.count ?? 0}
+                            nbBillets={
+                              recurrent
+                                ? event.totalBilletsSerie ?? 0
+                                : event.tickets?.[0]?.count ?? 0
+                            }
                             className="block w-full px-4 py-2 text-left text-sm text-rose hover:bg-rose/5 disabled:opacity-50"
                           />
                         </div>
