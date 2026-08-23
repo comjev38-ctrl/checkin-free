@@ -28,7 +28,7 @@ export default async function LayoutAdmin({
     "";
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-fond">
       <NavAdmin nomAffiche={nomAffiche} />
       {children}
     </div>

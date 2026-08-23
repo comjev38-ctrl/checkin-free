@@ -58,7 +58,7 @@ function ChampImage({
 
   return (
     <div>
-      <label className="block font-mono text-xs uppercase text-stone">{label}</label>
+      <label className="block text-xs uppercase text-sourdine">{label}</label>
       <input
         type="file"
         accept="image/*"
@@ -68,17 +68,17 @@ function ChampImage({
           setApercu(url);
           onFichierChoisi(f, url);
         }}
-        className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+        className="mt-1 w-full text-xs text-sourdine file:mr-3 file:rounded-md file:border-0 file:bg-ligne file:px-3 file:py-2 file:text-xs file:font-medium file:text-encre"
       />
       {(apercu || urlActuelle) && (
-        // eslint-disable-next-line @next/next/no-img-element
+        // eslint-disable-next-ligne @next/next/no-img-element
         <img
           src={apercu ?? urlActuelle ?? ""}
           alt=""
           className={
             formeRonde
-              ? "mt-2 h-16 w-16 rounded-full border border-line object-cover"
-              : "mt-2 h-16 w-full rounded-md border border-line object-cover"
+              ? "mt-2 h-16 w-16 rounded-full border border-ligne object-cover"
+              : "mt-2 h-16 w-full rounded-md border border-ligne object-cover"
           }
         />
       )}
@@ -187,7 +187,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
   return (
     <form onSubmit={enregistrer} className="mt-8 space-y-5">
       {estUneSeance && (
-        <div className="rounded-md border border-line bg-white px-4 py-3 text-sm text-stone">
+        <div className="rounded-md border border-ligne bg-white px-4 py-3 text-sm text-sourdine">
           Ceci est une séance individuelle d&apos;un événement récurrent. Le
           rythme (jour/heure) se modifie depuis l&apos;événement modèle.
         </div>
@@ -199,9 +199,9 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           required
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
         />
-        <p className="mt-1 text-xs text-stone">
+        <p className="mt-1 text-xs text-sourdine">
           URL (inchangée) : /evenement/{event.slug}
         </p>
       </div>
@@ -212,7 +212,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
         />
       </div>
 
@@ -220,7 +220,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         <div className="grid grid-cols-2 gap-4">
           <div>
             <LabelChamp obligatoire={false}>Date de cette séance</LabelChamp>
-            <p className="mt-1 rounded-md border border-line bg-line/20 px-3 py-2 text-ink">
+            <p className="mt-1 rounded-md border border-ligne bg-ligne/20 px-3 py-2 text-encre">
               {new Date(event.date_debut).toLocaleString("fr-FR", {
                 dateStyle: "long",
                 timeStyle: "short",
@@ -235,22 +235,22 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
               value={capacite}
               onChange={(e) => setCapacite(e.target.value)}
               placeholder="Illimitée"
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
             />
           </div>
         </div>
       ) : (
         <>
           <div>
-            <label className="block font-mono text-xs uppercase text-stone">
+            <label className="block text-xs uppercase text-sourdine">
               Type d&apos;événement
             </label>
-            <div className="mt-1 flex gap-1 rounded-md bg-line/50 p-1 font-mono text-xs uppercase">
+            <div className="mt-1 flex gap-1 rounded-md bg-ligne/50 p-1 text-xs uppercase">
               <button
                 type="button"
                 onClick={() => setType("ponctuel")}
                 className={`flex-1 rounded px-3 py-2 ${
-                  type === "ponctuel" ? "bg-white text-ink shadow-sm" : "text-stone"
+                  type === "ponctuel" ? "bg-white text-encre shadow-sm" : "text-sourdine"
                 }`}
               >
                 Ponctuel
@@ -259,7 +259,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                 type="button"
                 onClick={() => setType("recurrent")}
                 className={`flex-1 rounded px-3 py-2 ${
-                  type === "recurrent" ? "bg-white text-ink shadow-sm" : "text-stone"
+                  type === "recurrent" ? "bg-white text-encre shadow-sm" : "text-sourdine"
                 }`}
               >
                 Récurrent (hebdomadaire)
@@ -276,7 +276,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   required
                   value={dateDebut}
                   onChange={(e) => setDateDebut(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
               <div>
@@ -285,7 +285,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   type="time"
                   value={heureFin}
                   onChange={(e) => setHeureFin(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
               <div>
@@ -296,7 +296,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   value={capacite}
                   onChange={(e) => setCapacite(e.target.value)}
                   placeholder="Illimitée"
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                   <select
                     value={jourSemaine}
                     onChange={(e) => setJourSemaine(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   >
                     {JOURS_SEMAINE.map((j) => (
                       <option key={j.valeur} value={j.valeur}>
@@ -324,7 +324,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                     required
                     value={heureDebut}
                     onChange={(e) => setHeureDebut(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
                 <div>
@@ -333,7 +333,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                     type="time"
                     value={heureFin}
                     onChange={(e) => setHeureFin(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
                 <div>
@@ -344,11 +344,11 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
                     value={capacite}
                     onChange={(e) => setCapacite(e.target.value)}
                     placeholder="Illimitée"
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
               </div>
-              <p className="-mt-2 text-xs text-stone">
+              <p className="-mt-2 text-xs text-sourdine">
                 La séance de la semaine reste affichée jusqu&apos;à
                 l&apos;heure de fin — c&apos;est seulement après qu&apos;une
                 nouvelle séance sera créée pour la semaine suivante.
@@ -363,7 +363,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         <input
           value={lieu}
           onChange={(e) => setLieu(e.target.value)}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
         />
       </div>
 
@@ -380,17 +380,17 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
           onFichierChoisi={(f) => setBanniereFichier(f)}
         />
       </div>
-      <p className="-mt-2 text-xs text-stone">
+      <p className="-mt-2 text-xs text-sourdine">
         Laisse vide pour garder l&apos;image actuelle. 5 Mo max chacune. Logo :
         carré, min. 500×500 px. Bannière : large, environ 1600×500 px.
       </p>
 
       <div>
-        <label className="block font-mono text-xs uppercase text-stone">Statut</label>
+        <label className="block text-xs uppercase text-sourdine">Statut</label>
         <select
           value={statut}
           onChange={(e) => setStatut(e.target.value as typeof statut)}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
         >
           <option value="brouillon">Brouillon (page non visible)</option>
           <option value="publie">Publié (inscriptions ouvertes)</option>
@@ -398,20 +398,20 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
         </select>
       </div>
 
-      {erreur && <p className="text-sm text-rose">{erreur}</p>}
+      {erreur && <p className="text-sm text-corail">{erreur}</p>}
 
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={() => router.push("/admin")}
-          className="rounded-md border border-line px-5 py-3 font-medium text-ink hover:bg-white"
+          className="rounded-md border border-ligne px-5 py-3 font-medium text-encre hover:bg-white"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={enCours}
-          className="flex-1 rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
+          className="flex-1 rounded-md bg-indigo px-5 py-3 font-medium text-white hover:bg-indigo/90 disabled:opacity-50"
         >
           {enCours ? "Enregistrement…" : "Enregistrer les modifications"}
         </button>

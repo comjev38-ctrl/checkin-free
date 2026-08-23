@@ -40,18 +40,18 @@ export default async function PageInscrits({
       <div className="mx-auto max-w-3xl">
         <Link
           href="/admin"
-          className="font-mono text-xs uppercase tracking-wide text-stone hover:text-ink hover:underline"
+          className="text-xs uppercase tracking-wide text-sourdine hover:text-encre hover:underline"
         >
           ← Mes événements
         </Link>
-        <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="mt-4 text-xs uppercase tracking-[0.2em] text-indigo">
           Inscrits
         </p>
-        <h1 className="mt-1 font-display text-3xl italic text-ink">
+        <h1 className="mt-1 font-sans text-3xl font-bold text-encre">
           {event.titre}
         </h1>
         {estUneSeance && (
-          <p className="mt-1 text-sm capitalize text-stone">Semaine du {libelleDate}</p>
+          <p className="mt-1 text-sm capitalize text-sourdine">Semaine du {libelleDate}</p>
         )}
 
         <TableauInscrits eventTitre={libelle} tickets={tickets ?? []} />

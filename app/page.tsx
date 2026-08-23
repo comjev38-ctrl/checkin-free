@@ -28,17 +28,17 @@ export default async function PageAccueil() {
     ) ?? [];
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-screen bg-fond">
       <EntetePublique />
 
       <section className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           Billetterie associative
         </p>
-        <h1 className="mt-3 max-w-2xl font-display text-4xl italic leading-tight text-ink sm:text-5xl">
+        <h1 className="mt-3 max-w-2xl font-sans text-4xl font-bold leading-tight text-encre sm:text-5xl">
           Réserve ta place, en deux minutes, sans compte à créer.
         </h1>
-        <p className="mt-4 max-w-xl text-ink/70">
+        <p className="mt-4 max-w-xl text-encre/70">
           Choisis un événement ci-dessous pour réserver ta place. Ton billet
           avec QR code arrive instantanément à l&apos;écran et par email.
         </p>
@@ -47,7 +47,7 @@ export default async function PageAccueil() {
       <section className="mx-auto max-w-4xl px-6 pb-20">
         {evenementsAVenir.length > 0 ? (
           <>
-            <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-sourdine">
               À venir
             </h2>
             <div className="mt-4 grid gap-5 sm:grid-cols-2">
@@ -57,7 +57,7 @@ export default async function PageAccueil() {
             </div>
           </>
         ) : (
-          <div className="rounded-xl border border-line bg-white px-6 py-14 text-center text-stone">
+          <div className="rounded-xl border border-ligne bg-white px-6 py-14 text-center text-sourdine">
             Aucun événement ouvert aux inscriptions pour l&apos;instant.
             <br />
             Reviens bientôt !
@@ -66,7 +66,7 @@ export default async function PageAccueil() {
 
         {evenementsPasses.length > 0 && (
           <>
-            <h2 className="mt-14 font-mono text-xs uppercase tracking-[0.2em] text-stone">
+            <h2 className="mt-14 text-xs uppercase tracking-[0.2em] text-sourdine">
               Passés
             </h2>
             <div className="mt-4 grid gap-5 opacity-60 sm:grid-cols-2">
@@ -82,10 +82,10 @@ export default async function PageAccueil() {
 }
 
 const TUILES = [
-  { bg: "bg-violet", texte: "text-violet" },
-  { bg: "bg-orange", texte: "text-orange" },
-  { bg: "bg-bleu", texte: "text-bleu" },
-  { bg: "bg-fuchsia", texte: "text-fuchsia" },
+  { bg: "bg-indigo", texte: "text-indigo" },
+  { bg: "bg-ambre", texte: "text-ambre" },
+  { bg: "bg-ciel", texte: "text-ciel" },
+  { bg: "bg-corail", texte: "text-corail" },
 ];
 
 function CarteEvenement({ event, index }: { event: any; index: number }) {
@@ -126,7 +126,7 @@ function CarteEvenement({ event, index }: { event: any; index: number }) {
   return (
     <Link
       href={`/evenement/${event.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:border-ink/30 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-ligne bg-white shadow-carte transition hover:-translate-y-0.5"
     >
       <div className="relative h-40 w-full">
         {event.image_url ? (
@@ -152,17 +152,17 @@ function CarteEvenement({ event, index }: { event: any; index: number }) {
         )}
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="font-mono text-[11px] uppercase tracking-wide text-emerald">
+        <p className="text-xs font-semibold uppercase tracking-wide text-vert">
           {date}
         </p>
-        <h3 className="mt-2 font-display text-xl italic leading-snug text-ink">
+        <h3 className="mt-2 font-sans text-xl font-bold leading-snug text-encre">
           {event.titre}
         </h3>
         {event.lieu && (
-          <p className="mt-1 text-sm text-stone">{event.lieu}</p>
+          <p className="mt-1 text-sm text-sourdine">{event.lieu}</p>
         )}
         {placesRestantes != null && (
-          <p className="mt-1 text-sm text-stone">
+          <p className="mt-1 text-sm text-sourdine">
             {placesRestantes > 0
               ? `${placesRestantes} place${placesRestantes > 1 ? "s" : ""} restante${
                   placesRestantes > 1 ? "s" : ""
@@ -170,7 +170,7 @@ function CarteEvenement({ event, index }: { event: any; index: number }) {
               : "Complet"}
           </p>
         )}
-        <span className="mt-auto pt-4 font-mono text-xs uppercase tracking-wide text-violet underline-offset-4 group-hover:underline">
+        <span className="mt-auto self-start rounded-lg bg-indigo-clair px-3.5 py-2 text-sm font-semibold text-indigo transition group-hover:bg-indigo group-hover:text-white">
           Voir l&apos;événement →
         </span>
       </div>

@@ -10,10 +10,10 @@ export default function LabelChamp({
   return (
     <label
       htmlFor={htmlFor}
-      className="block font-mono text-xs uppercase text-stone"
+      className="block text-xs uppercase text-sourdine"
     >
       {children}
-      {obligatoire && <span className="ml-0.5 text-rose">*</span>}
+      {obligatoire && <span className="ml-0.5 text-corail">*</span>}
     </label>
   );
 }

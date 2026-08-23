@@ -114,12 +114,12 @@ async function notifierAdmins(
     to: destinataires,
     subject: `Nouvelle inscription — ${titreEvenement}`,
     html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-        <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">
+      <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
+        <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
           Nouvelle inscription
         </p>
-        <h1 style="font-size:20px; margin:4px 0 16px;">${titreEvenement}</h1>
-        <p><strong>${prenom} ${nom}</strong> vient de réserver sa place.</p>
+        <h1 style="font-size:20px; font-weight:700; color:#1E1B39; margin:4px 0 16px;">${titreEvenement}</h1>
+        <p style="color:#1E1B39;"><strong>${prenom} ${nom}</strong> vient de réserver sa place.</p>
       </div>
     `,
   });

@@ -8,8 +8,8 @@ export default async function PageScan({
 }) {
   if (!searchParams.event) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-paper px-6">
-        <p className="text-stone">
+      <main className="flex min-h-screen items-center justify-center bg-fond px-6">
+        <p className="text-sourdine">
           Choisis un événement depuis le tableau de bord pour ouvrir le
           scanner.
         </p>

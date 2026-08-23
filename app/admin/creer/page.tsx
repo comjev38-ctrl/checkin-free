@@ -123,24 +123,24 @@ export default function PageCreerEvenement() {
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-xl">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           Nouvel événement
         </p>
-        <h1 className="mt-1 font-display text-3xl italic text-ink">
+        <h1 className="mt-1 font-sans text-3xl font-bold text-encre">
           Créer une page événement
         </h1>
 
         <form className="mt-8 space-y-5">
           <div>
-            <label className="block font-mono text-xs uppercase text-stone">
+            <label className="block text-xs uppercase text-sourdine">
               Type d&apos;événement
             </label>
-            <div className="mt-1 flex gap-1 rounded-md bg-line/50 p-1 font-mono text-xs uppercase">
+            <div className="mt-1 flex gap-1 rounded-md bg-ligne/50 p-1 text-xs uppercase">
               <button
                 type="button"
                 onClick={() => setType("ponctuel")}
                 className={`flex-1 rounded px-3 py-2 ${
-                  type === "ponctuel" ? "bg-white text-ink shadow-sm" : "text-stone"
+                  type === "ponctuel" ? "bg-white text-encre shadow-sm" : "text-sourdine"
                 }`}
               >
                 Ponctuel
@@ -149,14 +149,14 @@ export default function PageCreerEvenement() {
                 type="button"
                 onClick={() => setType("recurrent")}
                 className={`flex-1 rounded px-3 py-2 ${
-                  type === "recurrent" ? "bg-white text-ink shadow-sm" : "text-stone"
+                  type === "recurrent" ? "bg-white text-encre shadow-sm" : "text-sourdine"
                 }`}
               >
                 Récurrent (hebdomadaire)
               </button>
             </div>
             {type === "recurrent" && (
-              <p className="mt-2 text-xs text-stone">
+              <p className="mt-2 text-xs text-sourdine">
                 Une nouvelle séance (et donc de nouveaux billets) sera créée
                 automatiquement chaque semaine, à date fixe. L&apos;historique
                 des séances passées reste consultable dans l&apos;admin.
@@ -170,11 +170,11 @@ export default function PageCreerEvenement() {
               required
               value={titre}
               onChange={(e) => setTitre(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
               placeholder="Soirée gospel"
             />
             {titre && (
-              <p className="mt-1 text-xs text-stone">
+              <p className="mt-1 text-xs text-sourdine">
                 URL : /evenement/{creerSlug(titre)}
               </p>
             )}
@@ -186,7 +186,7 @@ export default function PageCreerEvenement() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
             />
           </div>
 
@@ -199,7 +199,7 @@ export default function PageCreerEvenement() {
                   required
                   value={dateDebut}
                   onChange={(e) => setDateDebut(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
               <div>
@@ -208,7 +208,7 @@ export default function PageCreerEvenement() {
                   type="time"
                   value={heureFinPonctuel}
                   onChange={(e) => setHeureFinPonctuel(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
               <div>
@@ -219,7 +219,7 @@ export default function PageCreerEvenement() {
                   value={capacite}
                   onChange={(e) => setCapacite(e.target.value)}
                   placeholder="Illimitée"
-                  className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                  className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                 />
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function PageCreerEvenement() {
                   <select
                     value={jourSemaine}
                     onChange={(e) => setJourSemaine(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   >
                     {JOURS_SEMAINE.map((j) => (
                       <option key={j.valeur} value={j.valeur}>
@@ -247,7 +247,7 @@ export default function PageCreerEvenement() {
                     required
                     value={heureDebut}
                     onChange={(e) => setHeureDebut(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
                 <div>
@@ -256,7 +256,7 @@ export default function PageCreerEvenement() {
                     type="time"
                     value={heureFin}
                     onChange={(e) => setHeureFin(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
                 <div>
@@ -267,11 +267,11 @@ export default function PageCreerEvenement() {
                     value={capacite}
                     onChange={(e) => setCapacite(e.target.value)}
                     placeholder="Illimitée"
-                    className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+                    className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
                   />
                 </div>
               </div>
-              <p className="-mt-2 text-xs text-stone">
+              <p className="-mt-2 text-xs text-sourdine">
                 La séance de la semaine reste affichée jusqu&apos;à l&apos;heure
                 de fin (ex: 19h) — c&apos;est seulement après qu&apos;une
                 nouvelle séance sera créée pour la semaine suivante.
@@ -284,33 +284,33 @@ export default function PageCreerEvenement() {
             <input
               value={lieu}
               onChange={(e) => setLieu(e.target.value)}
-              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
               placeholder="Grenoble"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-mono text-xs uppercase text-stone">
+              <label className="block text-xs uppercase text-sourdine">
                 Logo (carré)
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => choisirFichier(e, setLogoFichier, setLogoApercu)}
-                className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+                className="mt-1 w-full text-xs text-sourdine file:mr-3 file:rounded-md file:border-0 file:bg-ligne file:px-3 file:py-2 file:text-xs file:font-medium file:text-encre"
               />
               {logoApercu && (
-                // eslint-disable-next-line @next/next/no-img-element
+                // eslint-disable-next-ligne @next/next/no-img-element
                 <img
                   src={logoApercu}
                   alt=""
-                  className="mt-2 h-16 w-16 rounded-full border border-line object-cover"
+                  className="mt-2 h-16 w-16 rounded-full border border-ligne object-cover"
                 />
               )}
             </div>
             <div>
-              <label className="block font-mono text-xs uppercase text-stone">
+              <label className="block text-xs uppercase text-sourdine">
                 Bannière (large)
               </label>
               <input
@@ -319,37 +319,37 @@ export default function PageCreerEvenement() {
                 onChange={(e) =>
                   choisirFichier(e, setBanniereFichier, setBanniereApercu)
                 }
-                className="mt-1 w-full text-xs text-stone file:mr-3 file:rounded-md file:border-0 file:bg-line file:px-3 file:py-2 file:text-xs file:font-mono file:uppercase file:text-ink"
+                className="mt-1 w-full text-xs text-sourdine file:mr-3 file:rounded-md file:border-0 file:bg-ligne file:px-3 file:py-2 file:text-xs file:font-medium file:text-encre"
               />
               {banniereApercu && (
-                // eslint-disable-next-line @next/next/no-img-element
+                // eslint-disable-next-ligne @next/next/no-img-element
                 <img
                   src={banniereApercu}
                   alt=""
-                  className="mt-2 h-16 w-full rounded-md border border-line object-cover"
+                  className="mt-2 h-16 w-full rounded-md border border-ligne object-cover"
                 />
               )}
             </div>
           </div>
-          <p className="-mt-2 text-xs text-stone">
+          <p className="-mt-2 text-xs text-sourdine">
             Optionnel, 5 Mo max chacun. Logo : carré, min. 500×500 px. Bannière :
             large, environ 1600×500 px.
           </p>
 
-          {erreur && <p className="text-sm text-rose">{erreur}</p>}
+          {erreur && <p className="text-sm text-corail">{erreur}</p>}
 
           <div className="flex gap-3 pt-2">
             <button
               onClick={(e) => creerEtPublier(e, "brouillon")}
               disabled={enCours}
-              className="rounded-md border border-line px-5 py-3 font-medium text-ink hover:bg-white disabled:opacity-50"
+              className="rounded-md border border-ligne px-5 py-3 font-medium text-encre hover:bg-white disabled:opacity-50"
             >
               Enregistrer en brouillon
             </button>
             <button
               onClick={(e) => creerEtPublier(e, "publie")}
               disabled={enCours}
-              className="flex-1 rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
+              className="flex-1 rounded-md bg-indigo px-5 py-3 font-medium text-white hover:bg-indigo/90 disabled:opacity-50"
             >
               {enCours ? "Envoi…" : "Publier la page"}
             </button>

@@ -119,35 +119,35 @@ export default function TableauInscrits({
   return (
     <div className="mt-8">
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-line bg-white p-4">
-          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-violet/15">
-            <TicketIcon size={13} className="text-violet" />
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo/15">
+            <TicketIcon size={13} className="text-indigo" />
           </span>
-          <p className="font-mono text-[10px] uppercase text-stone">Inscrits</p>
-          <p className="mt-1 font-display text-2xl italic text-ink">
+          <p className="text-[10px] uppercase text-sourdine">Inscrits</p>
+          <p className="mt-1 font-sans text-2xl font-bold text-encre">
             {billetsActifs.length}
           </p>
         </div>
-        <div className="rounded-lg border border-line bg-white p-4">
-          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald/15">
-            <UserCheck size={13} className="text-emerald" />
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-vert/15">
+            <UserCheck size={13} className="text-vert" />
           </span>
-          <p className="font-mono text-[10px] uppercase text-stone">Arrivés</p>
-          <p className="mt-1 font-display text-2xl italic text-emerald">{nbArrives}</p>
+          <p className="text-[10px] uppercase text-sourdine">Arrivés</p>
+          <p className="mt-1 font-sans text-2xl font-bold text-vert">{nbArrives}</p>
         </div>
-        <div className="rounded-lg border border-line bg-white p-4">
-          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-orange/15">
-            <Clock size={13} className="text-orange" />
+        <div className="rounded-lg border border-ligne bg-white p-4">
+          <span className="mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-ambre/15">
+            <Clock size={13} className="text-ambre" />
           </span>
-          <p className="font-mono text-[10px] uppercase text-stone">En attente</p>
-          <p className="mt-1 font-display text-2xl italic text-ink">
+          <p className="text-[10px] uppercase text-sourdine">En attente</p>
+          <p className="mt-1 font-sans text-2xl font-bold text-encre">
             {billetsActifs.length - nbArrives}
           </p>
         </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-md bg-line/50 p-1 font-mono text-[11px] uppercase">
+        <div className="flex gap-1 rounded-md bg-ligne/50 p-1 text-[11px] uppercase">
           {[
             { valeur: "tous", label: "Tous" },
             { valeur: "arrives", label: "Arrivés" },
@@ -157,7 +157,7 @@ export default function TableauInscrits({
               key={opt.valeur}
               onClick={() => setFiltre(opt.valeur as typeof filtre)}
               className={`rounded px-3 py-1.5 ${
-                filtre === opt.valeur ? "bg-white text-ink shadow-sm" : "text-stone"
+                filtre === opt.valeur ? "bg-white text-encre shadow-sm" : "text-sourdine"
               }`}
             >
               {opt.label}
@@ -169,14 +169,14 @@ export default function TableauInscrits({
           <button
             onClick={exporterCSV}
             disabled={billetsActifs.length === 0}
-            className="rounded-md border border-line bg-white px-3 py-2 font-mono text-xs uppercase text-ink hover:bg-line/30 disabled:opacity-40"
+            className="rounded-md border border-ligne bg-white px-3 py-2 text-xs uppercase text-encre hover:bg-ligne/30 disabled:opacity-40"
           >
             Exporter CSV
           </button>
           <button
             onClick={copierTexte}
             disabled={billetsActifs.length === 0}
-            className="rounded-md border border-line bg-white px-3 py-2 font-mono text-xs uppercase text-ink hover:bg-line/30 disabled:opacity-40"
+            className="rounded-md border border-ligne bg-white px-3 py-2 text-xs uppercase text-encre hover:bg-ligne/30 disabled:opacity-40"
           >
             {copieFaite ? "Copié ✓" : "Copier en texte"}
           </button>
@@ -188,30 +188,30 @@ export default function TableauInscrits({
                 ? "Liste longue : si WhatsApp n'ouvre pas le texte complet, utilise plutôt « Copier en texte »"
                 : undefined
             }
-            className="rounded-md bg-emerald px-3 py-2 font-mono text-xs uppercase text-paper hover:bg-emerald/90 disabled:opacity-40"
+            className="rounded-md bg-vert px-3 py-2 text-xs uppercase text-white hover:bg-vert/90 disabled:opacity-40"
           >
             Partager sur WhatsApp
           </button>
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-white">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-line text-left font-mono text-[11px] uppercase text-stone">
+            <tr className="border-b border-ligne text-left text-[11px] uppercase text-sourdine">
               <th className="px-4 py-3">Nom</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Inscrit le</th>
               <th className="px-4 py-3">Statut</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line">
+          <tbody className="divide-y divide-ligne">
             {listeFiltree.length ? (
               listeFiltree.map((t) => (
                 <tr key={t.id}>
-                  <td className="px-4 py-3 text-ink">{nomComplet(t)}</td>
-                  <td className="px-4 py-3 text-stone">{t.email ?? "—"}</td>
-                  <td className="px-4 py-3 text-stone">
+                  <td className="px-4 py-3 text-encre">{nomComplet(t)}</td>
+                  <td className="px-4 py-3 text-sourdine">{t.email ?? "—"}</td>
+                  <td className="px-4 py-3 text-sourdine">
                     {new Date(t.created_at).toLocaleDateString("fr-FR", {
                       day: "2-digit",
                       month: "2-digit",
@@ -221,18 +221,18 @@ export default function TableauInscrits({
                   </td>
                   <td className="px-4 py-3">
                     {t.statut === "utilise" ? (
-                      <span className="text-emerald">
+                      <span className="text-vert">
                         Arrivé{heureScan(t) ? ` · ${heureScan(t)}` : ""}
                       </span>
                     ) : (
-                      <span className="text-stone">En attente</span>
+                      <span className="text-sourdine">En attente</span>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-stone">
+                <td colSpan={4} className="px-4 py-10 text-center text-sourdine">
                   Aucun inscrit dans cette catégorie.
                 </td>
               </tr>

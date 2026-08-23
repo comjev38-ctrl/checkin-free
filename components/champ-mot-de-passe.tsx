@@ -33,13 +33,13 @@ export default function ChampMotDePasse({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-md border border-line bg-white px-3 py-2 pr-10 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+        className="w-full rounded-md border border-ligne bg-white px-3 py-2 pr-10 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-stone hover:text-ink"
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-sourdine hover:text-encre"
       >
         {visible ? <EyeOff size={17} /> : <Eye size={17} />}
       </button>

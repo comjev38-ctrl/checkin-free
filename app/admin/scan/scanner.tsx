@@ -77,29 +77,29 @@ export default function Scanner({
         .then(() => scannerRef.current?.clear())
         .catch(() => {});
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-ligne react-hooks/exhaustive-deps
   }, [modeManuel]);
 
   const couleurResultat =
     resultat?.statut === "ok"
-      ? "bg-emerald text-paper"
+      ? "bg-vert text-white"
       : resultat?.statut === "deja_utilise"
-      ? "bg-amber text-ink"
-      : "bg-rose text-paper";
+      ? "bg-ambre text-encre"
+      : "bg-corail text-white";
 
   return (
-    <main className="flex min-h-screen flex-col bg-ink px-6 py-8 text-paper">
+    <main className="flex min-h-screen flex-col bg-encre px-6 py-8 text-white">
       <div className="mx-auto w-full max-w-sm flex-1">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+            <p className="text-xs uppercase tracking-[0.2em] text-indigo">
               Contrôle d&apos;accès
             </p>
-            <h1 className="mt-1 font-display text-2xl italic">
+            <h1 className="mt-1 font-sans text-2xl font-bold">
               {eventTitre ?? "Scanner les billets"}
             </h1>
             {eventDate && (
-              <p className="mt-0.5 text-xs text-paper/50">
+              <p className="mt-0.5 text-xs text-white/50">
                 {new Date(eventDate).toLocaleDateString("fr-FR", {
                   weekday: "long",
                   day: "numeric",
@@ -112,7 +112,7 @@ export default function Scanner({
           </div>
           <Link
             href={`/admin/stats/${eventId}`}
-            className="rounded-md border border-white/20 px-3 py-2 text-xs text-paper/70 hover:bg-white/10 hover:text-paper"
+            className="rounded-md border border-white/20 px-3 py-2 text-xs text-white/70 hover:bg-white/10 hover:text-white"
           >
             Stats →
           </Link>
@@ -133,11 +133,11 @@ export default function Scanner({
               value={codeManuel}
               onChange={(e) => setCodeManuel(e.target.value)}
               placeholder="Code du billet"
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-3 font-mono text-paper outline-none placeholder:text-paper/40"
+              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-3 font-mono text-white outline-none placeholder:text-white/40"
             />
             <button
               type="submit"
-              className="w-full rounded-md bg-emerald px-5 py-3 font-medium text-paper hover:bg-emerald/90"
+              className="w-full rounded-md bg-vert px-5 py-3 font-medium text-white hover:bg-vert/90"
             >
               Vérifier
             </button>
@@ -146,14 +146,14 @@ export default function Scanner({
 
         <button
           onClick={() => setModeManuel(!modeManuel)}
-          className="mt-4 font-mono text-xs uppercase tracking-wide text-paper/50 hover:text-paper"
+          className="mt-4 text-xs uppercase tracking-wide text-white/50 hover:text-white"
         >
           {modeManuel ? "← Revenir à la caméra" : "Saisir le code manuellement →"}
         </button>
 
         {resultat && (
           <div className={`mt-8 rounded-lg p-5 ${couleurResultat}`}>
-            <p className="font-display text-2xl italic">
+            <p className="font-sans text-2xl font-bold">
               {resultat.statut === "ok" && "Accès validé"}
               {resultat.statut === "deja_utilise" && "Déjà scanné"}
               {resultat.statut === "invalide" && "Billet invalide"}

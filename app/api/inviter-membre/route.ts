@@ -100,17 +100,17 @@ export async function POST(req: Request) {
         to: email,
         subject: "Ton accès à l'espace organisateur CheckIn Free",
         html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
-            <p style="text-transform:uppercase; letter-spacing:0.1em; font-size:11px; color:#1B7A5B;">
+          <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
+            <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
               Espace organisateur
             </p>
-            <h1 style="font-size:20px; margin:4px 0 16px;">Tu as été ajouté(e) à l'équipe</h1>
-            <p>Voici tes identifiants de connexion :</p>
-            <p>Email : <strong>${email}</strong></p>
-            <p>Mot de passe provisoire : <strong style="font-family:monospace; font-size:16px;">${motDePasseProvisoire}</strong></p>
-            <p>Connecte-toi puis change ce mot de passe — ce sera obligatoire dès la première connexion.</p>
+            <h1 style="font-size:20px; font-weight:700; color:#1E1B39; margin:4px 0 16px;">Tu as été ajouté(e) à l'équipe</h1>
+            <p style="color:#1E1B39;">Voici tes identifiants de connexion :</p>
+            <p style="color:#1E1B39;">Email : <strong>${email}</strong></p>
+            <p style="color:#1E1B39;">Mot de passe provisoire : <strong style="font-family:monospace; font-size:16px;">${motDePasseProvisoire}</strong></p>
+            <p style="color:#1E1B39;">Connecte-toi puis change ce mot de passe — ce sera obligatoire dès la première connexion.</p>
             <p style="margin-top:24px;">
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/connexion" style="display:inline-block; background:#16213E; color:#FAFAF8; text-decoration:none; font-size:14px; padding:12px 24px; border-radius:8px;">
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL}/admin/connexion" style="display:inline-block; background:#5B5FEF; color:#ffffff; text-decoration:none; font-size:14px; font-weight:600; padding:12px 24px; border-radius:10px;">
                 Se connecter
               </a>
             </p>

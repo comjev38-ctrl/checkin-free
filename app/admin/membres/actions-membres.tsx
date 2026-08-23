@@ -51,18 +51,18 @@ export function FormulaireInviter() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="nouveau-membre@email.fr"
-        className="flex-1 rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+        className="flex-1 rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
       />
       <button
         type="submit"
         disabled={enCours}
-        className="rounded-md bg-violet px-4 py-2 text-sm font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
+        className="rounded-md bg-indigo px-4 py-2 text-sm font-medium text-white hover:bg-indigo/90 disabled:opacity-50"
       >
         {enCours ? "…" : "Inviter"}
       </button>
-      {erreur && <p className="w-full text-sm text-rose">{erreur}</p>}
-      {avertissement && <p className="w-full text-sm text-amber">{avertissement}</p>}
-      {succes && <p className="w-full text-sm text-emerald">{succes}</p>}
+      {erreur && <p className="w-full text-sm text-corail">{erreur}</p>}
+      {avertissement && <p className="w-full text-sm text-ambre">{avertissement}</p>}
+      {succes && <p className="w-full text-sm text-vert">{succes}</p>}
     </form>
   );
 }
@@ -88,7 +88,7 @@ export function BoutonRetirer({ email }: { email: string }) {
     <button
       onClick={retirer}
       disabled={enCours}
-      className="text-rose hover:underline disabled:opacity-50"
+      className="text-corail hover:underline disabled:opacity-50"
     >
       Retirer
     </button>

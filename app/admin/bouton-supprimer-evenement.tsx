@@ -8,7 +8,7 @@ export default function BoutonSupprimerEvenement({
   eventId,
   titre,
   nbBillets,
-  className = "text-rose hover:underline disabled:opacity-50",
+  className = "text-corail hover:underline disabled:opacity-50",
 }: {
   eventId: string;
   titre: string;

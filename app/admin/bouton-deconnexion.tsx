@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function BoutonDeconnexion({
-  className = "text-stone hover:text-ink hover:underline",
+  className = "text-sourdine hover:text-encre hover:underline",
   children = "Déconnexion",
 }: {
   className?: string;

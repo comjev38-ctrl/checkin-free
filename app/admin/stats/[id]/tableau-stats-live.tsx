@@ -181,18 +181,18 @@ export default function TableauStatsLive({ event }: { event: Event }) {
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-stone">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-sourdine">
         <span
           className={`h-1.5 w-1.5 rounded-full ${
-            connecteLive ? "bg-emerald" : "bg-amber"
+            connecteLive ? "bg-vert" : "bg-ambre"
           }`}
         />
         {connecteLive ? "Mis à jour en direct" : "Connexion en direct…"}
       </div>
 
       {compteARebours ? (
-        <div className="rounded-xl border border-line bg-white p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+        <div className="rounded-xl border border-ligne bg-white p-6">
+          <p className="text-xs uppercase tracking-[0.2em] text-sourdine">
             Avant le début
           </p>
           <div className="mt-3 grid grid-cols-4 gap-2 text-center">
@@ -203,10 +203,10 @@ export default function TableauStatsLive({ event }: { event: Event }) {
               { valeur: compteARebours.secondes, label: "sec" },
             ].map((bloc) => (
               <div key={bloc.label}>
-                <p className="font-display text-3xl italic text-ink">
+                <p className="font-sans text-3xl font-bold text-encre">
                   {String(bloc.valeur).padStart(2, "0")}
                 </p>
-                <p className="font-mono text-[10px] uppercase text-stone">
+                <p className="text-[10px] uppercase text-sourdine">
                   {bloc.label}
                 </p>
               </div>
@@ -214,68 +214,68 @@ export default function TableauStatsLive({ event }: { event: Event }) {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-emerald/30 bg-emerald/5 p-4 text-center font-mono text-xs uppercase tracking-wide text-emerald">
+        <div className="rounded-xl border border-vert/30 bg-vert/5 p-4 text-center text-xs uppercase tracking-wide text-vert">
           Événement en cours ou terminé
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-line bg-white p-6">
+        <div className="rounded-xl border border-ligne bg-white p-6">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet/15">
-              <Ticket size={15} className="text-violet" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo/15">
+              <Ticket size={15} className="text-indigo" />
             </span>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+            <p className="text-xs uppercase tracking-[0.2em] text-sourdine">
               Billets émis
             </p>
           </div>
-          <p className="mt-2 font-display text-4xl italic text-ink">
+          <p className="mt-2 font-sans text-4xl font-bold text-encre">
             {nbBillets ?? "…"}
             {event.capacite_max && (
-              <span className="text-lg text-stone"> / {event.capacite_max}</span>
+              <span className="text-lg text-sourdine"> / {event.capacite_max}</span>
             )}
           </p>
           {tauxRemplissage != null && (
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-line">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-ligne">
               <div
-                className="h-full bg-violet transition-all duration-500"
+                className="h-full bg-indigo transition-all duration-500"
                 style={{ width: `${tauxRemplissage}%` }}
               />
             </div>
           )}
         </div>
 
-        <div className="rounded-xl border border-line bg-white p-6">
+        <div className="rounded-xl border border-ligne bg-white p-6">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald/15">
-              <Users2 size={15} className="text-emerald" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-vert/15">
+              <Users2 size={15} className="text-vert" />
             </span>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+            <p className="text-xs uppercase tracking-[0.2em] text-sourdine">
               Présents (scannés)
             </p>
           </div>
-          <p className="mt-2 font-display text-4xl italic text-ink">
+          <p className="mt-2 font-sans text-4xl font-bold text-encre">
             {nbCheckins ?? "…"}
-            <span className="text-lg text-stone"> ({tauxPresence}%)</span>
+            <span className="text-lg text-sourdine"> ({tauxPresence}%)</span>
           </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-line">
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-ligne">
             <div
-              className="h-full bg-emerald transition-all duration-500"
+              className="h-full bg-vert transition-all duration-500"
               style={{ width: `${tauxPresence}%` }}
             />
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-line bg-white p-4 sm:p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+      <div className="rounded-xl border border-ligne bg-white p-4 sm:p-6">
+        <p className="text-xs uppercase tracking-[0.2em] text-sourdine">
           Évolution
         </p>
         {serie.length >= 2 ? (
           <div className="mt-4 -ml-2 h-56 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={serie} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E3DFD5" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E7E4F5" />
                 <XAxis
                   dataKey="t"
                   type="number"
@@ -290,7 +290,7 @@ export default function TableauStatsLive({ event }: { event: Event }) {
                   contentStyle={{
                     fontSize: 12,
                     borderRadius: 8,
-                    borderColor: "#E3DFD5",
+                    borderColor: "#E7E4F5",
                   }}
                 />
                 <Legend
@@ -302,14 +302,14 @@ export default function TableauStatsLive({ event }: { event: Event }) {
                 <Line
                   type="stepAfter"
                   dataKey="inscriptions"
-                  stroke="#16213E"
+                  stroke="#5B5FEF"
                   strokeWidth={2}
                   dot={false}
                 />
                 <Line
                   type="stepAfter"
                   dataKey="arrivees"
-                  stroke="#1B7A5B"
+                  stroke="#22B07D"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -317,25 +317,25 @@ export default function TableauStatsLive({ event }: { event: Event }) {
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="mt-4 py-8 text-center text-sm text-stone">
+          <p className="mt-4 py-8 text-center text-sm text-sourdine">
             Pas encore assez de données pour tracer une courbe.
           </p>
         )}
       </div>
 
-      <div className="rounded-xl border border-line bg-white p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-stone">
+      <div className="rounded-xl border border-ligne bg-white p-6">
+        <p className="text-xs uppercase tracking-[0.2em] text-sourdine">
           Dernier scan
         </p>
         {dernierScan ? (
-          <p className="mt-2 text-ink">
+          <p className="mt-2 text-encre">
             {dernierScan.nom} —{" "}
-            <span className="text-stone">
+            <span className="text-sourdine">
               {new Date(dernierScan.scanned_at).toLocaleTimeString("fr-FR")}
             </span>
           </p>
         ) : (
-          <p className="mt-2 text-stone">Aucun scan pour l&apos;instant.</p>
+          <p className="mt-2 text-sourdine">Aucun scan pour l&apos;instant.</p>
         )}
       </div>
     </div>

@@ -93,17 +93,17 @@ function FormulaireConnexion() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center gap-2.5">
           <Logo size={32} />
-          <span className="font-display text-xl italic text-ink">CheckIn Free</span>
+          <span className="font-sans text-xl font-bold text-encre">CheckIn Free</span>
         </div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           Espace organisateur
         </p>
-        <h1 className="mt-2 font-display text-3xl italic text-ink">
+        <h1 className="mt-2 font-sans text-3xl font-bold text-encre">
           Mot de passe oublié
         </h1>
 
         {lienEnvoye ? (
-          <p className="mt-6 rounded-md bg-emerald/10 px-4 py-3 text-emerald">
+          <p className="mt-6 rounded-md bg-vert/10 px-4 py-3 text-vert">
             Email envoyé à {emailOubli}. Ouvre ta boîte mail pour réinitialiser
             ton mot de passe.
           </p>
@@ -115,13 +115,13 @@ function FormulaireConnexion() {
               value={emailOubli}
               onChange={(e) => setEmailOubli(e.target.value)}
               placeholder="ton@email.fr"
-              className="w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+              className="w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
             />
-            {erreur && <p className="text-sm text-rose">{erreur}</p>}
+            {erreur && <p className="text-sm text-corail">{erreur}</p>}
             <button
               type="submit"
               disabled={enCours}
-              className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
+              className="w-full rounded-md bg-indigo px-5 py-3 font-medium text-white hover:bg-indigo/90 disabled:opacity-50"
             >
               {enCours ? "Envoi…" : "Recevoir un lien de réinitialisation"}
             </button>
@@ -135,7 +135,7 @@ function FormulaireConnexion() {
             setErreur(null);
             setLienEnvoye(false);
           }}
-          className="mt-4 text-sm text-stone hover:text-ink hover:underline"
+          className="mt-4 text-sm text-sourdine hover:text-encre hover:underline"
         >
           ← Retour à la connexion
         </button>
@@ -147,12 +147,12 @@ function FormulaireConnexion() {
     <div className="w-full max-w-sm">
       <div className="mb-8 flex items-center gap-2.5">
         <Logo size={32} />
-        <span className="font-display text-xl italic text-ink">CheckIn Free</span>
+        <span className="font-sans text-xl font-bold text-encre">CheckIn Free</span>
       </div>
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+      <p className="text-xs uppercase tracking-[0.2em] text-indigo">
         Espace organisateur
       </p>
-      <h1 className="mt-2 font-display text-3xl italic text-ink">
+      <h1 className="mt-2 font-sans text-3xl font-bold text-encre">
         Connexion
       </h1>
 
@@ -163,7 +163,7 @@ function FormulaireConnexion() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="ton@email.fr"
-          className="w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
         />
         <ChampMotDePasse
           required
@@ -172,11 +172,11 @@ function FormulaireConnexion() {
           placeholder="Mot de passe"
           autoComplete="current-password"
         />
-        {erreur && <p className="text-sm text-rose">{erreur}</p>}
+        {erreur && <p className="text-sm text-corail">{erreur}</p>}
         <button
           type="submit"
           disabled={enCours}
-          className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper hover:bg-violet/90 disabled:opacity-50"
+          className="w-full rounded-md bg-indigo px-5 py-3 font-medium text-white hover:bg-indigo/90 disabled:opacity-50"
         >
           {enCours ? "Connexion…" : "Se connecter"}
         </button>
@@ -186,7 +186,7 @@ function FormulaireConnexion() {
             setModeOubli(true);
             setErreur(null);
           }}
-          className="w-full text-sm text-stone hover:text-ink hover:underline"
+          className="w-full text-sm text-sourdine hover:text-encre hover:underline"
         >
           Mot de passe oublié ?
         </button>
@@ -197,7 +197,7 @@ function FormulaireConnexion() {
 
 export default function PageConnexion() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper px-6">
+    <main className="flex min-h-screen items-center justify-center bg-fond px-6">
       <Suspense fallback={null}>
         <FormulaireConnexion />
       </Suspense>

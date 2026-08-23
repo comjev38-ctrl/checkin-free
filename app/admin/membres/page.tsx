@@ -16,13 +16,13 @@ export default async function PageMembres() {
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-xl">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           Équipe
         </p>
-        <h1 className="mt-1 font-display text-3xl italic text-ink">
+        <h1 className="mt-1 font-sans text-3xl font-bold text-encre">
           Membres admin
         </h1>
-        <p className="mt-2 text-sm text-stone">
+        <p className="mt-2 text-sm text-sourdine">
           Toute personne ajoutée ici peut créer, publier, modifier et
           supprimer n&apos;importe quel événement, et scanner les billets à
           l&apos;entrée.
@@ -30,25 +30,25 @@ export default async function PageMembres() {
 
         <FormulaireInviter />
 
-        <div className="mt-8 divide-y divide-line border-t border-line">
+        <div className="mt-8 divide-y divide-ligne border-t border-ligne">
           {membres?.length ? (
             membres.map((m) => (
               <div
                 key={m.email}
                 className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3"
               >
-                <span className="text-ink">
+                <span className="text-encre">
                   {[m.prenom, m.nom].filter(Boolean).join(" ") || m.email}
                   {[m.prenom, m.nom].filter(Boolean).length > 0 && (
-                    <span className="ml-2 text-sm text-stone">{m.email}</span>
+                    <span className="ml-2 text-sm text-sourdine">{m.email}</span>
                   )}
                   {m.email === user?.email && (
-                    <span className="ml-2 font-mono text-xs text-stone">
+                    <span className="ml-2 text-xs text-sourdine">
                       (toi)
                     </span>
                   )}
                   {!m.user_id && (
-                    <span className="ml-2 font-mono text-xs text-amber">
+                    <span className="ml-2 rounded-full bg-ambre-clair px-2 py-0.5 text-xs font-medium text-ambre">
                       en attente de première connexion
                     </span>
                   )}
@@ -59,7 +59,7 @@ export default async function PageMembres() {
               </div>
             ))
           ) : (
-            <p className="py-6 text-stone">Aucun membre pour l&apos;instant.</p>
+            <p className="py-6 text-sourdine">Aucun membre pour l&apos;instant.</p>
           )}
         </div>
       </div>

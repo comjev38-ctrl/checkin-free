@@ -13,10 +13,10 @@ const JOURS = ["", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", 
 // de référence) pour les événements sans bannière — chaque carte
 // prend la couleur suivante dans le cycle.
 const TUILES = [
-  { bg: "bg-violet", texte: "text-violet" },
-  { bg: "bg-orange", texte: "text-orange" },
-  { bg: "bg-bleu", texte: "text-bleu" },
-  { bg: "bg-fuchsia", texte: "text-fuchsia" },
+  { bg: "bg-indigo", texte: "text-indigo" },
+  { bg: "bg-ambre", texte: "text-ambre" },
+  { bg: "bg-ciel", texte: "text-ciel" },
+  { bg: "bg-corail", texte: "text-corail" },
 ];
 
 export default async function TableauDeBordAdmin() {
@@ -81,16 +81,16 @@ export default async function TableauDeBordAdmin() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+            <p className="text-xs uppercase tracking-[0.2em] text-indigo">
               Espace organisateur
             </p>
-            <h1 className="mt-1 font-display text-3xl italic text-ink">
+            <h1 className="mt-1 font-sans text-3xl font-bold text-encre">
               Mes événements
             </h1>
           </div>
           <Link
             href="/admin/creer"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-violet px-4 py-2.5 text-sm font-medium text-paper hover:bg-violet/90"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo/90"
           >
             <Plus size={16} />
             Nouvel événement
@@ -111,12 +111,12 @@ export default async function TableauDeBordAdmin() {
               return (
                 <div
                   key={event.id}
-                  className="flex flex-col rounded-xl border border-line bg-white"
+                  className="flex flex-col rounded-xl border border-ligne bg-white"
                 >
                   {/* Vignette */}
                   <div
                     className={`relative h-32 w-full overflow-hidden rounded-t-xl ${
-                      event.image_url ? "bg-ink/5" : tuile.bg
+                      event.image_url ? "bg-encre/5" : tuile.bg
                     }`}
                   >
                     {event.image_url ? (
@@ -136,10 +136,10 @@ export default async function TableauDeBordAdmin() {
                     <span
                       className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-medium shadow-sm ${
                         event.statut === "publie"
-                          ? "bg-emerald text-paper"
+                          ? "bg-vert text-white"
                           : event.statut === "brouillon"
-                          ? "bg-amber text-paper"
-                          : "bg-stone text-paper"
+                          ? "bg-ambre text-white"
+                          : "bg-sourdine text-white"
                       }`}
                     >
                       {event.statut === "publie"
@@ -149,7 +149,7 @@ export default async function TableauDeBordAdmin() {
                         : "Clos"}
                     </span>
                     {recurrent && (
-                      <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-ink shadow-sm">
+                      <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-encre shadow-sm">
                         Hebdomadaire
                       </span>
                     )}
@@ -157,10 +157,10 @@ export default async function TableauDeBordAdmin() {
 
                   {/* Contenu */}
                   <div className="flex flex-1 flex-col p-4">
-                    <h2 className="font-display text-lg leading-snug text-ink">
+                    <h2 className="font-sans font-bold text-lg leading-snug text-encre">
                       {event.titre}
                     </h2>
-                    <p className="mt-1 text-sm text-stone">
+                    <p className="mt-1 text-sm text-sourdine">
                       {recurrent
                         ? `Tous les ${JOURS[event.jour_semaine]} à ${event.heure_debut?.slice(0, 5)}`
                         : new Date(event.date_debut).toLocaleDateString("fr-FR", {
@@ -168,7 +168,7 @@ export default async function TableauDeBordAdmin() {
                           })}
                     </p>
 
-                    <div className="mt-3 flex items-center gap-4 text-sm text-stone">
+                    <div className="mt-3 flex items-center gap-4 text-sm text-sourdine">
                       <span className="flex items-center gap-1.5">
                         <Ticket size={15} />
                         {nbBillets}
@@ -189,40 +189,40 @@ export default async function TableauDeBordAdmin() {
                     <div className="mt-4 flex items-center gap-2 pt-3">
                       <Link
                         href={`/evenement/${event.slug}`}
-                        className="flex-1 rounded-md border border-line px-3 py-2 text-center text-sm text-ink hover:bg-line/20"
+                        className="flex-1 rounded-md border border-ligne px-3 py-2 text-center text-sm text-encre hover:bg-ligne/20"
                       >
                         Voir la page
                       </Link>
                       {idPourActions && (
                         <Link
                           href={`/admin/stats/${idPourActions}`}
-                          className="flex-1 rounded-md bg-violet px-3 py-2 text-center text-sm text-paper hover:bg-violet/90"
+                          className="flex-1 rounded-md bg-indigo px-3 py-2 text-center text-sm text-white hover:bg-indigo/90"
                         >
                           Administrer
                         </Link>
                       )}
                       <details className="relative">
-                        <summary className="flex h-[38px] w-[38px] cursor-pointer list-none items-center justify-center rounded-md border border-line text-stone hover:bg-line/20 [&::-webkit-details-marker]:hidden">
+                        <summary className="flex h-[38px] w-[38px] cursor-pointer list-none items-center justify-center rounded-md border border-ligne text-sourdine hover:bg-ligne/20 [&::-webkit-details-marker]:hidden">
                           <MoreHorizontal size={18} />
                         </summary>
-                        <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-line bg-white py-1 shadow-lg">
+                        <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-ligne bg-white py-1 shadow-lg">
                           {idPourActions && (
                             <>
                               <Link
                                 href={`/admin/scan?event=${idPourActions}`}
-                                className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
                               >
                                 Scanner les billets
                               </Link>
                               <Link
                                 href={`/admin/stats/${idPourActions}`}
-                                className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
                               >
                                 Stats en direct
                               </Link>
                               <Link
                                 href={`/admin/inscrits/${idPourActions}`}
-                                className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
                               >
                                 Inscrits
                               </Link>
@@ -231,18 +231,18 @@ export default async function TableauDeBordAdmin() {
                           {recurrent && (
                             <Link
                               href={`/admin/serie/${event.id}`}
-                              className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                              className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
                             >
                               Historique des séances
                             </Link>
                           )}
                           <Link
                             href={`/admin/modifier/${event.id}`}
-                            className="block px-4 py-2 text-sm text-ink hover:bg-line/20"
+                            className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
                           >
                             Modifier
                           </Link>
-                          <div className="my-1 border-t border-line" />
+                          <div className="my-1 border-t border-ligne" />
                           <BoutonSupprimerEvenement
                             eventId={event.id}
                             titre={event.titre}
@@ -251,7 +251,7 @@ export default async function TableauDeBordAdmin() {
                                 ? event.totalBilletsSerie ?? 0
                                 : event.tickets?.[0]?.count ?? 0
                             }
-                            className="block w-full px-4 py-2 text-left text-sm text-rose hover:bg-rose/5 disabled:opacity-50"
+                            className="block w-full px-4 py-2 text-left text-sm text-corail hover:bg-corail/5 disabled:opacity-50"
                           />
                         </div>
                       </details>
@@ -262,7 +262,7 @@ export default async function TableauDeBordAdmin() {
             })}
           </div>
         ) : (
-          <div className="mt-8 rounded-xl border border-line bg-white py-16 text-center text-stone">
+          <div className="mt-8 rounded-xl border border-ligne bg-white py-16 text-center text-sourdine">
             Aucun événement pour l&apos;instant. Crée le premier.
           </div>
         )}

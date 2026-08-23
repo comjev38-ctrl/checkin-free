@@ -42,10 +42,10 @@ export default async function PageEvenement({
 
   if (erreurResolution) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-paper px-6">
+      <main className="flex min-h-screen items-center justify-center bg-fond px-6">
         <div className="max-w-sm text-center">
-          <p className="font-display text-2xl italic text-ink">{brut.titre}</p>
-          <p className="mt-4 text-stone">{erreurResolution}</p>
+          <p className="font-sans text-2xl font-bold text-encre">{brut.titre}</p>
+          <p className="mt-4 text-sourdine">{erreurResolution}</p>
         </div>
       </main>
     );
@@ -73,7 +73,7 @@ export default async function PageEvenement({
     : null;
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-screen bg-fond">
       <EntetePublique retour={{ href: "/", label: "CheckIn Free" }} />
 
       {event.image_url && (
@@ -86,7 +86,7 @@ export default async function PageEvenement({
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-encre/70 via-encre/10 to-transparent" />
         </div>
       )}
 
@@ -96,27 +96,27 @@ export default async function PageEvenement({
             event.image_url ? "-mt-10 sm:-mt-12" : "pt-10"
           }`}
         >
-          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-paper bg-white shadow-md sm:h-24 sm:w-24">
+          <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-white bg-white shadow-md sm:h-24 sm:w-24">
             <Image src={event.logo_url} alt="" fill className="object-cover" />
           </div>
         </div>
       )}
 
       <div className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-violet">
+        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           {event.parent_event_id
             ? "Rendez-vous hebdomadaire · cette semaine"
             : event.statut === "publie"
             ? "Inscription ouverte"
             : ""}
         </p>
-        <h1 className="mt-3 font-display text-4xl italic text-ink sm:text-5xl">
+        <h1 className="mt-3 font-sans text-4xl font-bold text-encre sm:text-5xl">
           {event.titre}
         </h1>
 
-        <dl className="mt-6 space-y-2 border-l-2 border-violet/40 pl-4 text-ink">
+        <dl className="mt-6 space-y-2 border-l-2 border-indigo/40 pl-4 text-encre">
           <div className="flex gap-2">
-            <dt className="w-20 shrink-0 font-mono text-xs uppercase text-stone">
+            <dt className="w-20 shrink-0 text-xs uppercase text-sourdine">
               Quand
             </dt>
             <dd className="capitalize">
@@ -126,7 +126,7 @@ export default async function PageEvenement({
           </div>
           {event.lieu && (
             <div className="flex gap-2">
-              <dt className="w-20 shrink-0 font-mono text-xs uppercase text-stone">
+              <dt className="w-20 shrink-0 text-xs uppercase text-sourdine">
                 Où
               </dt>
               <dd>{event.lieu}</dd>
@@ -135,18 +135,18 @@ export default async function PageEvenement({
         </dl>
 
         {event.description && (
-          <p className="mt-8 whitespace-pre-line leading-relaxed text-ink/80">
+          <p className="mt-8 whitespace-pre-ligne leading-relaxed text-encre/80">
             {event.description}
           </p>
         )}
 
-        <div className="mt-10 border-t border-line pt-8">
+        <div className="mt-10 border-t border-ligne pt-8">
           {event.statut === "clos" ? (
-            <div className="rounded-lg border border-line bg-stone/5 px-5 py-4 text-stone">
+            <div className="rounded-lg border border-ligne bg-sourdine/5 px-5 py-4 text-sourdine">
               Les inscriptions à cet événement sont closes.
             </div>
           ) : complet ? (
-            <div className="rounded-lg border border-rose/30 bg-rose/5 px-5 py-4 text-rose">
+            <div className="rounded-lg border border-corail/30 bg-corail/5 px-5 py-4 text-corail">
               Cet événement est complet. Les inscriptions sont closes.
             </div>
           ) : (

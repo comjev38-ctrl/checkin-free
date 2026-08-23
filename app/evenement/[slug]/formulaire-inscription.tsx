@@ -44,7 +44,7 @@ export default function FormulaireInscription({
 
   return (
     <form onSubmit={reserverLaPlace} className="space-y-5">
-      <h2 className="font-display text-xl text-ink">Réserver ma place</h2>
+      <h2 className="font-sans font-bold text-xl text-encre">Réserver ma place</h2>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -54,7 +54,7 @@ export default function FormulaireInscription({
             required
             value={prenom}
             onChange={(e) => setPrenom(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+            className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
             placeholder="Jeanne"
           />
         </div>
@@ -65,7 +65,7 @@ export default function FormulaireInscription({
             required
             value={nom}
             onChange={(e) => setNom(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+            className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
             placeholder="Dupont"
           />
         </div>
@@ -79,21 +79,21 @@ export default function FormulaireInscription({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-ink outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
+          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
           placeholder="jeanne@exemple.fr"
         />
       </div>
 
-      {erreur && <p className="text-sm text-rose">{erreur}</p>}
+      {erreur && <p className="text-sm text-corail">{erreur}</p>}
 
       <button
         type="submit"
         disabled={envoiEnCours}
-        className="w-full rounded-md bg-violet px-5 py-3 font-medium text-paper transition hover:bg-violet/90 disabled:opacity-50"
+        className="w-full rounded-md bg-indigo px-5 py-3 font-medium text-white transition hover:bg-indigo/90 disabled:opacity-50"
       >
         {envoiEnCours ? "Génération du billet…" : "Obtenir mon billet"}
       </button>
-      <p className="text-center text-xs text-stone">
+      <p className="text-center text-xs text-sourdine">
         Gratuit · Aucune donnée de paiement demandée
       </p>
     </form>
