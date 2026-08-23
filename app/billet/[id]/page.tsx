@@ -24,6 +24,7 @@ export default async function PageBillet({
   const event = Array.isArray(ticket.event) ? ticket.event[0] : ticket.event;
   const qr = await genererQrDataUrl(ticket.code);
   const dateEvenement = new Date(event.date_debut).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "short",
     day: "numeric",
     month: "long",

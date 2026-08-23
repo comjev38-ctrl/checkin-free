@@ -61,6 +61,7 @@ export default async function PageEvenement({
     event.capacite_max != null && (placesReservees ?? 0) >= event.capacite_max;
 
   const dateEvenement = new Date(event.date_debut).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",

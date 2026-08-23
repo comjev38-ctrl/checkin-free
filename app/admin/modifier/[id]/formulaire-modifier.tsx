@@ -222,6 +222,7 @@ export default function FormulaireModifierEvenement({ event }: { event: Event })
             <LabelChamp obligatoire={false}>Date de cette séance</LabelChamp>
             <p className="mt-1 rounded-md border border-ligne bg-ligne/20 px-3 py-2 text-encre">
               {new Date(event.date_debut).toLocaleString("fr-FR", {
+                timeZone: "Europe/Paris",
                 dateStyle: "long",
                 timeStyle: "short",
               })}

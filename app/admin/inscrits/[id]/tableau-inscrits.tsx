@@ -43,16 +43,27 @@ export default function TableauInscrits({
 
   function formaterDateCSV(d: Date) {
     if (isNaN(d.getTime())) return "";
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
-      d.getHours()
-    )}:${pad(d.getMinutes())}`;
+    return d
+      .toLocaleString("en-CA", {
+        timeZone: "Europe/Paris",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      })
+      .replace(",", "");
   }
 
   function heureScan(t: Ticket) {
     const scan = t.checkins?.[0]?.scanned_at;
     return scan
-      ? new Date(scan).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })
+      ? new Date(scan).toLocaleString("fr-FR", {
+          timeZone: "Europe/Paris",
+          dateStyle: "short",
+          timeStyle: "short",
+        })
       : null;
   }
 
@@ -213,6 +224,7 @@ export default function TableauInscrits({
                   <td className="px-4 py-3 text-sourdine">{t.email ?? "—"}</td>
                   <td className="px-4 py-3 text-sourdine">
                     {new Date(t.created_at).toLocaleDateString("fr-FR", {
+                      timeZone: "Europe/Paris",
                       day: "2-digit",
                       month: "2-digit",
                       hour: "2-digit",

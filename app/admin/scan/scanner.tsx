@@ -101,6 +101,7 @@ export default function Scanner({
             {eventDate && (
               <p className="mt-0.5 text-xs text-white/50">
                 {new Date(eventDate).toLocaleDateString("fr-FR", {
+                  timeZone: "Europe/Paris",
                   weekday: "long",
                   day: "numeric",
                   month: "long",

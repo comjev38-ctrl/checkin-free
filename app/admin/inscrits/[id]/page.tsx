@@ -22,6 +22,7 @@ export default async function PageInscrits({
 
   const estUneSeance = !!event.parent_event_id;
   const libelleDate = new Date(event.date_debut).toLocaleDateString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",

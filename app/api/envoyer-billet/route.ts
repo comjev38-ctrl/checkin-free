@@ -37,6 +37,7 @@ export async function POST(req: Request) {
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const dateEvenement = new Date(event.date_debut).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     dateStyle: "full",
     timeStyle: "short",
   });

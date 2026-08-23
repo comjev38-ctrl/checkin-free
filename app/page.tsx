@@ -105,11 +105,12 @@ function CarteEvenement({ event, index }: { event: any; index: number }) {
             : event.heure_debut?.slice(0, 5);
           return `Tous les ${JOURS[event.jour_semaine]}, ${plage} · prochaine séance le ${prochaine.toLocaleDateString(
             "fr-FR",
-            { day: "numeric", month: "long" }
+            { timeZone: "Europe/Paris", day: "numeric", month: "long" }
           )}`;
         })()
       : (() => {
           const base = new Date(event.date_debut).toLocaleString("fr-FR", {
+            timeZone: "Europe/Paris",
             weekday: "short",
             day: "numeric",
             month: "long",

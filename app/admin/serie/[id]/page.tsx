@@ -60,6 +60,7 @@ export default async function PageHistoriqueSerie({
                   <div>
                     <p className="text-encre">
                       {new Date(seance.date_debut).toLocaleDateString("fr-FR", {
+                        timeZone: "Europe/Paris",
                         weekday: "long",
                         day: "numeric",
                         month: "long",

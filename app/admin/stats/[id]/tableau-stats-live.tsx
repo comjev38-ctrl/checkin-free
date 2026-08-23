@@ -45,6 +45,7 @@ function decouperCompteARebours(cibleMs: number) {
 
 function formaterHeure(t: number) {
   return new Date(t).toLocaleTimeString("fr-FR", {
+    timeZone: "Europe/Paris",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -331,7 +332,9 @@ export default function TableauStatsLive({ event }: { event: Event }) {
           <p className="mt-2 text-encre">
             {dernierScan.nom} —{" "}
             <span className="text-sourdine">
-              {new Date(dernierScan.scanned_at).toLocaleTimeString("fr-FR")}
+              {new Date(dernierScan.scanned_at).toLocaleTimeString("fr-FR", {
+                timeZone: "Europe/Paris",
+              })}
             </span>
           </p>
         ) : (

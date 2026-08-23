@@ -164,6 +164,7 @@ export default async function TableauDeBordAdmin() {
                       {recurrent
                         ? `Tous les ${JOURS[event.jour_semaine]} à ${event.heure_debut?.slice(0, 5)}`
                         : new Date(event.date_debut).toLocaleDateString("fr-FR", {
+                            timeZone: "Europe/Paris",
                             dateStyle: "long",
                           })}
                     </p>
@@ -178,6 +179,7 @@ export default async function TableauDeBordAdmin() {
                           <Users2 size={15} />
                           prochaine :{" "}
                           {new Date(seance.date_debut).toLocaleDateString("fr-FR", {
+                            timeZone: "Europe/Paris",
                             day: "numeric",
                             month: "short",
                           })}
