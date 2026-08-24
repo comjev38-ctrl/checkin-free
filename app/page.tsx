@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
+import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import EntetePublique from "@/components/entete-publique";
 import { PartyPopper } from "lucide-react";
 
@@ -17,13 +18,35 @@ export default async function PageAccueil() {
     .is("parent_event_id", null)
     .order("date_debut", { ascending: true });
 
+  // Pour un événement récurrent, le compteur du modèle lui-même est
+  // presque toujours 0 : les vraies inscriptions vont sur la séance
+  // de la semaine (un événement à part, avec ses propres billets), pas
+  // sur le modèle. On va donc chercher le vrai nombre de la séance
+  // en cours pour chaque événement récurrent affiché.
+  const eventsAvecCompteur = await Promise.all(
+    (events ?? []).map(async (event: any) => {
+      if (event.recurrence !== "hebdomadaire") return event;
+      try {
+        const seance = await obtenirOuCreerOccurrence(event);
+        const { count } = await supabase
+          .from("tickets")
+          .select("*", { count: "exact", head: true })
+          .eq("event_id", seance.id)
+          .neq("statut", "annule");
+        return { ...event, nbBilletsSeance: count ?? 0 };
+      } catch {
+        return { ...event, nbBilletsSeance: 0 };
+      }
+    })
+  );
+
   const maintenant = new Date();
   const evenementsAVenir =
-    events?.filter(
+    eventsAvecCompteur.filter(
       (e) => e.recurrence === "hebdomadaire" || new Date(e.date_debut) >= maintenant
     ) ?? [];
   const evenementsPasses =
-    events?.filter(
+    eventsAvecCompteur.filter(
       (e) => e.recurrence !== "hebdomadaire" && new Date(e.date_debut) < maintenant
     ) ?? [];
 
@@ -120,7 +143,10 @@ function CarteEvenement({ event, index }: { event: any; index: number }) {
           return heureFinAffichee ? `${base} – ${heureFinAffichee}` : base;
         })();
 
-  const nbBillets = event.tickets?.[0]?.count ?? 0;
+  const nbBillets =
+    event.recurrence === "hebdomadaire"
+      ? event.nbBilletsSeance ?? 0
+      : event.tickets?.[0]?.count ?? 0;
   const placesRestantes =
     event.capacite_max != null ? Math.max(0, event.capacite_max - nbBillets) : null;
 
