@@ -2,11 +2,30 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { eventId, prenom, nom, email } = await req.json();
+  const { eventId, prenom, nom, email, piegeAntiSpam } = await req.json();
+
+  // Champ honeypot : invisible pour un vrai visiteur, mais souvent
+  // rempli automatiquement par les bots qui remplissent tous les
+  // champs d'un formulaire. On répond comme si tout allait bien
+  // (pour ne pas leur apprendre qu'ils sont détectés) mais sans rien
+  // créer.
+  if (piegeAntiSpam) {
+    return NextResponse.json(
+      { message: "Une erreur est survenue, réessaie dans un instant." },
+      { status: 400 }
+    );
+  }
 
   if (!eventId || !prenom || !nom || !email) {
     return NextResponse.json(
       { message: "Prénom, nom, email et événement sont requis." },
+      { status: 400 }
+    );
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json(
+      { message: "Adresse email invalide." },
       { status: 400 }
     );
   }
@@ -23,6 +42,25 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { message: "Cet événement n'accepte plus d'inscriptions." },
       { status: 404 }
+    );
+  }
+
+  // Un même email ne peut réserver qu'une seule place par événement.
+  const { data: billetExistant } = await supabase
+    .from("tickets")
+    .select("id")
+    .eq("event_id", eventId)
+    .ilike("email", email.trim())
+    .neq("statut", "annule")
+    .maybeSingle();
+
+  if (billetExistant) {
+    return NextResponse.json(
+      {
+        message:
+          "Cet email a déjà réservé une place pour cet événement. Un seul billet par personne.",
+      },
+      { status: 409 }
     );
   }
 
@@ -43,11 +81,24 @@ export async function POST(req: Request) {
 
   const { data: ticket, error: ticketError } = await supabase
     .from("tickets")
-    .insert({ event_id: eventId, prenom, nom, email })
+    .insert({ event_id: eventId, prenom, nom, email: email.trim() })
     .select("id")
     .single();
 
   if (ticketError || !ticket) {
+    // Cas rare : deux requêtes concurrentes ont passé la vérification
+    // ci-dessus en même temps. L'index unique en base (voir migration
+    // 10) rejette alors la deuxième — on renvoie le même message
+    // clair plutôt qu'une erreur générique.
+    if (ticketError?.message?.includes("idx_un_billet_par_email_et_evenement")) {
+      return NextResponse.json(
+        {
+          message:
+            "Cet email a déjà réservé une place pour cet événement. Un seul billet par personne.",
+        },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { message: "Impossible de générer le billet, réessaie." },
       { status: 500 }

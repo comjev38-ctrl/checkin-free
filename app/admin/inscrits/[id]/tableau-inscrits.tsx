@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Ticket as TicketIcon, UserCheck, Clock } from "lucide-react";
+import { Ticket as TicketIcon, UserCheck, Clock, Trash2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Ticket = {
   id: string;
@@ -15,13 +16,15 @@ type Ticket = {
 
 export default function TableauInscrits({
   eventTitre,
-  tickets,
+  tickets: ticketsInitiaux,
 }: {
   eventTitre: string;
   tickets: Ticket[];
 }) {
+  const [tickets, setTickets] = useState(ticketsInitiaux);
   const [filtre, setFiltre] = useState<"tous" | "arrives" | "pas_arrives">("tous");
   const [copieFaite, setCopieFaite] = useState(false);
+  const [suppressionEnCours, setSuppressionEnCours] = useState<string | null>(null);
 
   const billetsActifs = useMemo(
     () => tickets.filter((t) => t.statut !== "annule"),
@@ -65,6 +68,26 @@ export default function TableauInscrits({
           timeStyle: "short",
         })
       : null;
+  }
+
+  async function supprimerBillet(t: Ticket) {
+    if (
+      !window.confirm(
+        `Supprimer le billet de ${nomComplet(t)} (${t.email ?? "sans email"}) ? Action irréversible.`
+      )
+    )
+      return;
+
+    setSuppressionEnCours(t.id);
+    const supabase = createClient();
+    const { error } = await supabase.from("tickets").delete().eq("id", t.id);
+    setSuppressionEnCours(null);
+
+    if (error) {
+      window.alert(`Erreur lors de la suppression : ${error.message}`);
+      return;
+    }
+    setTickets((prev) => prev.filter((x) => x.id !== t.id));
   }
 
   // ---------- Export CSV ----------
@@ -214,6 +237,7 @@ export default function TableauInscrits({
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Inscrit le</th>
               <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ligne">
@@ -240,11 +264,21 @@ export default function TableauInscrits({
                       <span className="text-sourdine">En attente</span>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => supprimerBillet(t)}
+                      disabled={suppressionEnCours === t.id}
+                      title="Supprimer ce billet"
+                      className="text-corail hover:text-corail/70 disabled:opacity-40"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-sourdine">
+                <td colSpan={5} className="px-4 py-10 text-center text-sourdine">
                   Aucun inscrit dans cette catégorie.
                 </td>
               </tr>

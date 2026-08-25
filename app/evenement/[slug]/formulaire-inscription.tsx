@@ -14,6 +14,7 @@ export default function FormulaireInscription({
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
+  const [siteWeb, setSiteWeb] = useState(""); // piège anti-spam (honeypot)
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -26,7 +27,13 @@ export default function FormulaireInscription({
       const res = await fetch("/api/inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, prenom, nom, email }),
+        body: JSON.stringify({
+          eventId,
+          prenom,
+          nom,
+          email,
+          piegeAntiSpam: siteWeb,
+        }),
       });
 
       if (!res.ok) {
@@ -43,7 +50,7 @@ export default function FormulaireInscription({
   }
 
   return (
-    <form onSubmit={reserverLaPlace} className="space-y-5">
+    <form onSubmit={reserverLaPlace} className="relative space-y-5">
       <h2 className="font-sans font-bold text-xl text-encre">Réserver ma place</h2>
 
       <div className="grid grid-cols-2 gap-3">
@@ -85,6 +92,25 @@ export default function FormulaireInscription({
       </div>
 
       {erreur && <p className="text-sm text-corail">{erreur}</p>}
+
+      {/* Piège anti-spam : invisible et inatteignable pour un vrai
+          visiteur, mais souvent rempli automatiquement par les bots
+          qui remplissent tous les champs d'un formulaire. */}
+      <div
+        aria-hidden="true"
+        className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden"
+      >
+        <label htmlFor="site-web">Site web</label>
+        <input
+          id="site-web"
+          name="site-web"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={siteWeb}
+          onChange={(e) => setSiteWeb(e.target.value)}
+        />
+      </div>
 
       <button
         type="submit"
