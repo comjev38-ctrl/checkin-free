@@ -66,7 +66,13 @@ export async function POST(req: Request) {
                   ${event.titre}
                 </div>
                 <div style="font-size:14px; color:#1E1B39; line-height:1.6;">
-                  ${dateEvenement}${event.lieu ? `<br>${event.lieu}` : ""}
+                  ${dateEvenement}${
+      event.lieu
+        ? `<br><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            event.lieu
+          )}" style="color:#5B5FEF; text-decoration:underline;">${event.lieu}</a>`
+        : ""
+    }
                 </div>
                 <div style="margin-top:16px; padding-top:14px; border-top:1px solid #E7E4F5;">
                   <span style="font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#6B7280; font-weight:600;">Titulaire</span>

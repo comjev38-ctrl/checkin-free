@@ -67,7 +67,20 @@ export default async function PageBillet({
                   {dateEvenement}
                   {heureFinAffichee && <> – {heureFinAffichee}</>}
                 </p>
-                {event.lieu && <p>{event.lieu}</p>}
+                {event.lieu && (
+                  <p>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        event.lieu
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo underline-offset-2 hover:underline"
+                    >
+                      {event.lieu}
+                    </a>
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 flex items-center gap-5 rounded-xl bg-fond p-4">

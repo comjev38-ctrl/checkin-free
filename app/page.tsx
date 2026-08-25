@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
@@ -9,7 +9,10 @@ import { PartyPopper } from "lucide-react";
 export const revalidate = 0;
 
 export default async function PageAccueil() {
-  const supabase = createClient();
+  // Clé privilégiée : nécessaire pour compter les billets (leur
+  // lecture détaillée est réservée aux admins), mais on n'expose ici
+  // que des nombres agrégés — jamais les billets eux-mêmes.
+  const supabase = createServiceClient();
 
   const { data: events } = await supabase
     .from("events")

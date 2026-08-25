@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -51,7 +51,7 @@ export default async function PageEvenement({
     );
   }
 
-  const { count: placesReservees } = await supabase
+  const { count: placesReservees } = await createServiceClient()
     .from("tickets")
     .select("*", { count: "exact", head: true })
     .eq("event_id", event.id)
@@ -130,13 +130,24 @@ export default async function PageEvenement({
               <dt className="w-20 shrink-0 text-xs uppercase text-sourdine">
                 Où
               </dt>
-              <dd>{event.lieu}</dd>
+              <dd>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    event.lieu
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo underline-offset-2 hover:underline"
+                >
+                  {event.lieu}
+                </a>
+              </dd>
             </div>
           )}
         </dl>
 
         {event.description && (
-          <p className="mt-8 whitespace-pre-ligne leading-relaxed text-encre/80">
+          <p className="mt-8 whitespace-pre-line leading-relaxed text-encre/80">
             {event.description}
           </p>
         )}
