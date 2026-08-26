@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     if (existant) {
       const { error: erreurMaj } = await supabaseAdmin.auth.admin.updateUserById(
         existant.id,
-        { password: motDePasseProvisoire }
+        { password: motDePasseProvisoire, email_confirm: true }
       );
       compteOk = !erreurMaj;
       userId = existant.id;
