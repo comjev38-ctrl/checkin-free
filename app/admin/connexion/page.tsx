@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Logo from "@/components/logo";
 import ChampMotDePasse from "@/components/champ-mot-de-passe";
@@ -33,7 +34,7 @@ function FormulaireConnexion() {
           .setSession({ access_token, refresh_token })
           .then(({ error }) => {
             if (!error) {
-              router.push("/admin");
+              router.push("/admin?menu=1");
               router.refresh();
             }
           });
@@ -71,7 +72,7 @@ function FormulaireConnexion() {
       );
       return;
     }
-    router.push("/admin");
+    router.push("/admin?menu=1");
     router.refresh();
   }
 
@@ -91,10 +92,10 @@ function FormulaireConnexion() {
   if (modeOubli) {
     return (
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center gap-2.5">
+        <Link href="/" className="mb-8 flex items-center gap-2.5">
           <Logo size={32} />
           <span className="font-sans text-xl font-bold text-encre">CheckIn Free</span>
-        </div>
+        </Link>
         <p className="text-xs uppercase tracking-[0.2em] text-indigo">
           Espace organisateur
         </p>
@@ -145,10 +146,10 @@ function FormulaireConnexion() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-8 flex items-center gap-2.5">
+      <Link href="/" className="mb-8 flex items-center gap-2.5">
         <Logo size={32} />
         <span className="font-sans text-xl font-bold text-encre">CheckIn Free</span>
-      </div>
+      </Link>
       <p className="text-xs uppercase tracking-[0.2em] text-indigo">
         Espace organisateur
       </p>

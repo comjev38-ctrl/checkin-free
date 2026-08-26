@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CalendarDays, Users, UserCircle, Home, LogOut, Menu, X } from "lucide-react";
 import BoutonDeconnexion from "./bouton-deconnexion";
 import Logo from "@/components/logo";
@@ -17,11 +17,23 @@ function estActif(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname.startsWith(href);
 }
 
-export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
+function NavAdminInterne({ nomAffiche }: { nomAffiche: string }) {
   const pathname = usePathname();
-  const [ouvert, setOuvert] = useState(false);
+  const searchParams = useSearchParams();
+  // Ouvert automatiquement juste après une connexion (voir
+  // /admin/connexion et /admin/compte, qui redirigent vers
+  // /admin?menu=1). Le paramètre n'est lu qu'une fois, au montage.
+  const [ouvert, setOuvert] = useState(() => searchParams.get("menu") === "1");
+  const premierRendu = useRef(true);
 
+  // Referme automatiquement à chaque navigation ultérieure — mais
+  // pas au tout premier rendu, sinon ça annulerait l'ouverture
+  // automatique ci-dessus.
   useEffect(() => {
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return;
+    }
     setOuvert(false);
   }, [pathname]);
 
@@ -108,5 +120,13 @@ export default function NavAdmin({ nomAffiche }: { nomAffiche: string }) {
         </div>
       </aside>
     </>
+  );
+}
+
+export default function NavAdmin(props: { nomAffiche: string }) {
+  return (
+    <Suspense fallback={null}>
+      <NavAdminInterne {...props} />
+    </Suspense>
   );
 }

@@ -118,7 +118,7 @@ function PageCompteInterne() {
       // le middleware relit un état à jour depuis zéro, sans aucun
       // risque de rester bloqué sur une page mise en cache.
       setTimeout(() => {
-        window.location.href = "/admin";
+        window.location.href = "/admin?menu=1";
       }, 1400);
     } else {
       setSuccesMdp(true);
