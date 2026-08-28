@@ -1,14 +1,33 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import EntetePublique from "@/components/entete-publique";
+import NavAdmin from "@/app/admin/nav-admin";
 import { PartyPopper } from "lucide-react";
 
 export const revalidate = 0;
 
 export default async function PageAccueil() {
+  // Session (cookies) : sert uniquement à savoir si un admin est
+  // connecté, pour afficher son menu ici aussi. Rien à voir avec la
+  // clé privilégiée utilisée juste après pour les compteurs publics.
+  const supabaseSession = createClient();
+  const {
+    data: { user },
+  } = await supabaseSession.auth.getUser();
+
+  let admin: { prenom: string | null; nom: string | null; role: string } | null = null;
+  if (user?.email) {
+    const { data } = await supabaseSession
+      .from("admins")
+      .select("prenom, nom, role")
+      .eq("email", user.email)
+      .maybeSingle();
+    admin = data;
+  }
+
   // Clé privilégiée : nécessaire pour compter les billets (leur
   // lecture détaillée est réservée aux admins), mais on n'expose ici
   // que des nombres agrégés — jamais les billets eux-mêmes.
@@ -55,7 +74,14 @@ export default async function PageAccueil() {
 
   return (
     <main className="min-h-screen bg-fond">
-      <EntetePublique />
+      {admin ? (
+        <NavAdmin
+          nomAffiche={[admin.prenom, admin.nom].filter(Boolean).join(" ") || user!.email!}
+          role={admin.role}
+        />
+      ) : (
+        <EntetePublique />
+      )}
 
       <section className="mx-auto max-w-4xl px-6 py-14 sm:py-20">
         <p className="text-xs uppercase tracking-[0.2em] text-indigo">
