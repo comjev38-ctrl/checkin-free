@@ -18,7 +18,7 @@ export default async function LayoutAdmin({
 
   const { data: monProfil } = await supabase
     .from("admins")
-    .select("prenom, nom")
+    .select("prenom, nom, role")
     .eq("email", user.email)
     .maybeSingle();
 
@@ -29,7 +29,7 @@ export default async function LayoutAdmin({
 
   return (
     <div className="min-h-screen bg-fond">
-      <NavAdmin nomAffiche={nomAffiche} />
+      <NavAdmin nomAffiche={nomAffiche} role={monProfil?.role ?? "organisateur"} />
       {children}
     </div>
   );

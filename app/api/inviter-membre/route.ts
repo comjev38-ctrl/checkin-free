@@ -11,8 +11,11 @@ function genererMotDePasseProvisoire() {
 }
 
 export async function POST(req: Request) {
-  const { email: emailBrut } = await req.json();
+  const { email: emailBrut, role: roleBrut } = await req.json();
   const email = (emailBrut ?? "").trim().toLowerCase();
+  const role = ["proprietaire", "organisateur", "scanneur"].includes(roleBrut)
+    ? roleBrut
+    : "organisateur";
 
   if (!email) {
     return NextResponse.json({ message: "Email requis." }, { status: 400 });
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
   // base (prévu pour l'ancien flux where l'email arrivait AVANT le
   // compte) ne se déclencherait jamais dans ce nouvel ordre.
   const { error: erreurUpsert } = await supabase.from("admins").upsert(
-    { email, mot_de_passe_provisoire: true, user_id: userId },
+    { email, mot_de_passe_provisoire: true, user_id: userId, role },
     { onConflict: "email" }
   );
 

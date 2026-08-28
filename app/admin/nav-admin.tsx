@@ -3,23 +3,35 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { CalendarDays, Users, UserCircle, Home, LogOut, Menu, X } from "lucide-react";
+import { CalendarDays, Users, UserCircle, Home, LogOut, Menu, X, ScanLine } from "lucide-react";
 import BoutonDeconnexion from "./bouton-deconnexion";
 import Logo from "@/components/logo";
 
-const LIENS = [
-  { href: "/admin", label: "Mes événements", icon: CalendarDays, exact: true },
-  { href: "/admin/membres", label: "Membres", icon: Users },
-  { href: "/admin/compte", label: "Mon compte", icon: UserCircle },
-];
+function liensPourRole(role: string) {
+  if (role === "scanneur") {
+    return [
+      { href: "/admin/scan", label: "Scanner", icon: ScanLine, exact: false },
+      { href: "/admin/compte", label: "Mon compte", icon: UserCircle, exact: true },
+    ];
+  }
+  const liens = [
+    { href: "/admin", label: "Mes événements", icon: CalendarDays, exact: true },
+  ];
+  if (role === "proprietaire") {
+    liens.push({ href: "/admin/membres", label: "Membres", icon: Users, exact: false });
+  }
+  liens.push({ href: "/admin/compte", label: "Mon compte", icon: UserCircle, exact: true });
+  return liens;
+}
 
 function estActif(pathname: string, href: string, exact?: boolean) {
   return exact ? pathname === href : pathname.startsWith(href);
 }
 
-function NavAdminInterne({ nomAffiche }: { nomAffiche: string }) {
+function NavAdminInterne({ nomAffiche, role }: { nomAffiche: string; role: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const liens = liensPourRole(role);
   // Ouvert automatiquement juste après une connexion (voir
   // /admin/connexion et /admin/compte, qui redirigent vers
   // /admin?menu=1). Le paramètre n'est lu qu'une fois, au montage.
@@ -92,7 +104,7 @@ function NavAdminInterne({ nomAffiche }: { nomAffiche: string }) {
             <Home size={18} />
             Site public
           </Link>
-          {LIENS.map(({ href, label, icon: Icon, exact }) => {
+          {liens.map(({ href, label, icon: Icon, exact }) => {
             const actif = estActif(pathname, href, exact);
             return (
               <Link
@@ -123,7 +135,7 @@ function NavAdminInterne({ nomAffiche }: { nomAffiche: string }) {
   );
 }
 
-export default function NavAdmin(props: { nomAffiche: string }) {
+export default function NavAdmin(props: { nomAffiche: string; role: string }) {
   return (
     <Suspense fallback={null}>
       <NavAdminInterne {...props} />

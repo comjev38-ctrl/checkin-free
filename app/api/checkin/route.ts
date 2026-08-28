@@ -16,6 +16,38 @@ export async function POST(req: Request) {
     );
   }
 
+  const { data: moi } = await supabase
+    .from("admins")
+    .select("role")
+    .eq("email", user.email)
+    .maybeSingle();
+
+  if (moi?.role === "scanneur") {
+    const { data: evenementScanne } = await supabase
+      .from("events")
+      .select("id, parent_event_id")
+      .eq("id", eventId)
+      .single();
+
+    const idsAVerifier = [eventId, evenementScanne?.parent_event_id].filter(
+      Boolean
+    ) as string[];
+
+    const { data: autorisation } = await supabase
+      .from("admin_evenements_autorises")
+      .select("event_id")
+      .eq("admin_email", user.email)
+      .in("event_id", idsAVerifier)
+      .maybeSingle();
+
+    if (!autorisation) {
+      return NextResponse.json(
+        { statut: "invalide", message: "Tu n'es pas autorisé à scanner pour cet événement." },
+        { status: 403 }
+      );
+    }
+  }
+
   const { data: ticket } = await supabase
     .from("tickets")
     .select("id, prenom, nom, statut, event_id")

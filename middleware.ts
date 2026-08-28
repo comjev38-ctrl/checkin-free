@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
     // Authentifié ne suffit pas : il faut aussi être dans l'équipe.
     const { data: membre } = await supabase
       .from("admins")
-      .select("email, mot_de_passe_provisoire, user_id")
+      .select("email, mot_de_passe_provisoire, user_id, role")
       .eq("email", user.email)
       .maybeSingle();
 
@@ -69,6 +69,28 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/compte";
       url.searchParams.set("mdp_provisoire", "1");
+      return NextResponse.redirect(url);
+    }
+
+    const chemin = request.nextUrl.pathname;
+
+    // Un scanneur ne peut accéder qu'au scanner et à son propre
+    // compte — tout le reste (tableau de bord, création/modification
+    // d'événements, membres, stats, inscrits...) lui est fermé.
+    if (membre.role === "scanneur") {
+      const zonesAutorisees = ["/admin/scan", "/admin/compte"];
+      const autorise = zonesAutorisees.some((z) => chemin.startsWith(z));
+      if (!autorise) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/scan";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // La gestion de l'équipe est réservée aux propriétaires.
+    if (chemin.startsWith("/admin/membres") && membre.role !== "proprietaire") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
   }
