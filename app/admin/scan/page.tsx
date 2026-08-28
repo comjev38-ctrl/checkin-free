@@ -83,11 +83,17 @@ export default async function PageScan({
     }
 
     return (
-      <main className="flex min-h-screen items-center justify-center bg-fond px-6">
-        <p className="text-sourdine">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-fond px-6">
+        <p className="text-center text-sourdine">
           Choisis un événement depuis le tableau de bord pour ouvrir le
           scanner.
         </p>
+        <Link
+          href="/admin"
+          className="rounded-md bg-indigo px-4 py-2 text-sm font-medium text-white hover:bg-indigo/90"
+        >
+          Aller au tableau de bord
+        </Link>
       </main>
     );
   }
@@ -137,6 +143,7 @@ export default async function PageScan({
       eventId={searchParams.event}
       eventTitre={event?.titre ?? null}
       eventDate={event?.date_debut ?? null}
+      role={moi?.role}
     />
   );
 }

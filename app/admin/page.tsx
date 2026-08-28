@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, MoreHorizontal, Ticket, Users2, PartyPopper } from "lucide-react";
+import { Plus, MoreHorizontal, Ticket, Users2, PartyPopper, ScanLine } from "lucide-react";
 import BoutonSupprimerEvenement from "./bouton-supprimer-evenement";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 
@@ -197,10 +197,11 @@ export default async function TableauDeBordAdmin() {
                       </Link>
                       {idPourActions && (
                         <Link
-                          href={`/admin/stats/${idPourActions}`}
-                          className="flex-1 rounded-md bg-indigo px-3 py-2 text-center text-sm text-white hover:bg-indigo/90"
+                          href={`/admin/scan?event=${idPourActions}`}
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-indigo px-3 py-2 text-center text-sm font-medium text-white hover:bg-indigo/90"
                         >
-                          Administrer
+                          <ScanLine size={16} />
+                          Scanner
                         </Link>
                       )}
                       <details className="relative">
@@ -210,12 +211,6 @@ export default async function TableauDeBordAdmin() {
                         <div className="absolute right-0 z-10 mt-2 w-48 rounded-md border border-ligne bg-white py-1 shadow-lg">
                           {idPourActions && (
                             <>
-                              <Link
-                                href={`/admin/scan?event=${idPourActions}`}
-                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
-                              >
-                                Scanner les billets
-                              </Link>
                               <Link
                                 href={`/admin/stats/${idPourActions}`}
                                 className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"

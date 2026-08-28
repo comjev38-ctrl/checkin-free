@@ -7,6 +7,7 @@ import { uploaderImageEvenement } from "@/lib/stockage";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
 import { datetimeLocalVersISO } from "@/lib/fuseau";
 import LabelChamp from "@/components/label-champ";
+import RetourAdmin from "@/components/retour-admin";
 
 function creerSlug(titre: string) {
   return titre
@@ -123,7 +124,8 @@ export default function PageCreerEvenement() {
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-indigo">
+        <RetourAdmin href="/admin" />
+        <p className="mt-4 text-xs uppercase tracking-[0.2em] text-indigo">
           Nouvel événement
         </p>
         <h1 className="mt-1 font-sans text-3xl font-bold text-encre">

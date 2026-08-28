@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import RetourAdmin from "@/components/retour-admin";
 
 export const revalidate = 0;
 
@@ -30,12 +31,7 @@ export default async function PageHistoriqueSerie({
   return (
     <main className="px-6 py-10">
       <div className="mx-auto max-w-3xl">
-        <Link
-          href="/admin"
-          className="text-xs uppercase tracking-wide text-sourdine hover:text-encre hover:underline"
-        >
-          ← Mes événements
-        </Link>
+        <RetourAdmin href="/admin" />
         <p className="mt-4 text-xs uppercase tracking-[0.2em] text-indigo">
           Historique des séances
         </p>

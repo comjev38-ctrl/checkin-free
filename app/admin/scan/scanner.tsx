@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type Resultat = {
@@ -13,11 +14,14 @@ export default function Scanner({
   eventId,
   eventTitre,
   eventDate,
+  role,
 }: {
   eventId: string;
   eventTitre?: string | null;
   eventDate?: string | null;
+  role?: string;
 }) {
+  const retourVers = role === "scanneur" ? "/admin/scan" : "/admin";
   const [modeManuel, setModeManuel] = useState(false);
   const [codeManuel, setCodeManuel] = useState("");
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -90,7 +94,14 @@ export default function Scanner({
   return (
     <main className="flex min-h-screen flex-col bg-encre px-6 py-8 text-white">
       <div className="mx-auto w-full max-w-sm flex-1">
-        <div className="flex items-center justify-between">
+        <Link
+          href={retourVers}
+          className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white"
+        >
+          <ArrowLeft size={14} />
+          {role === "scanneur" ? "Mes événements à scanner" : "Mes événements"}
+        </Link>
+        <div className="mt-3 flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-indigo">
               Contrôle d&apos;accès
