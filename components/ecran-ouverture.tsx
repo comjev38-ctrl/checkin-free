@@ -38,7 +38,7 @@ export default function EcranOuverture() {
 
   return (
     <div
-      className={`fixed inset-0 z-[999] flex items-center justify-center bg-encre transition-opacity duration-[400ms] ${
+      className={`fixed inset-0 z-[999] flex items-center justify-center bg-white transition-opacity duration-[400ms] ${
         etape === "sortie" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       aria-hidden="true"
@@ -54,7 +54,7 @@ export default function EcranOuverture() {
           <Logo size={72} />
         </div>
         <span
-          className={`font-sans text-xl font-bold text-white transition-all duration-500 ease-out ${
+          className={`font-sans text-xl font-bold text-encre transition-all duration-500 ease-out ${
             etape === "logo" ? "translate-y-1 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
