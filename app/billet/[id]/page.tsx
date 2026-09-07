@@ -111,6 +111,17 @@ export default async function PageBillet({
             Présente ce QR code — ou le code ci-dessus — à l&apos;entrée.
             {utilise && " Ce billet a déjà été utilisé pour un contrôle d'accès."}
           </p>
+
+          {!utilise && ticket.statut !== "annule" && (
+            <p className="mt-4 text-center">
+              <a
+                href={`/billet/${ticket.id}/annuler`}
+                className="text-sm text-sourdine underline-offset-2 hover:text-corail hover:underline"
+              >
+                Annuler ma place
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </main>

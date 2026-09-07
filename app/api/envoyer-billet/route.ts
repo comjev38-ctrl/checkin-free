@@ -102,6 +102,13 @@ export async function POST(req: Request) {
           Présente ce QR code — ou le code ci-dessus — à l'entrée.
         </td>
       </tr>
+      <tr>
+        <td style="text-align:center; padding-top:10px; font-size:12px;">
+          <a href="${urlBillet}/annuler" style="color:#9CA3AF; text-decoration:underline;">
+            Un empêchement ? Annuler ma place
+          </a>
+        </td>
+      </tr>
     </table>
   </div>
 

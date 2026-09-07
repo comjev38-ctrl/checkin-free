@@ -223,6 +223,12 @@ export default async function TableauDeBordAdmin() {
                               >
                                 Inscrits
                               </Link>
+                              <Link
+                                href={`/admin/importer/${idPourActions}`}
+                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
+                              >
+                                Importer des contacts
+                              </Link>
                             </>
                           )}
                           {recurrent && (
