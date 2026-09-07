@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LabelChamp from "@/components/label-champ";
-import { Plus, Trash2, Pencil, Send, Mail } from "lucide-react";
+import { Plus, Trash2, Pencil, Send, Mail, TestTube2 } from "lucide-react";
 
 type Rappel = {
   id: string;
@@ -174,6 +174,46 @@ function FormulaireRappel({
   const [nomExpediteur, setNomExpediteur] = useState(rappel?.nom_expediteur ?? "");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
+  const [testEnCours, setTestEnCours] = useState(false);
+  const [testResultat, setTestResultat] = useState<string | null>(null);
+  const [emailsTest, setEmailsTest] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setEmailsTest(data.user.email);
+    });
+  }, []);
+
+  async function envoyerTest() {
+    setTestEnCours(true);
+    setTestResultat(null);
+    const destinataires = emailsTest
+      .split(/[,;\s]+/)
+      .map((e) => e.trim())
+      .filter(Boolean);
+
+    const res = await fetch("/api/rappels/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventId,
+        sujet,
+        accroche,
+        description,
+        texteBouton,
+        lienBouton,
+        couleurAccent,
+        nomExpediteur,
+        destinataires,
+      }),
+    });
+    const data = await res.json();
+    setTestEnCours(false);
+    setTestResultat(
+      res.ok ? `Email de test envoyé à ${data.envoyeA}.` : data.message ?? "Échec de l'envoi."
+    );
+  }
 
   async function enregistrer(e: React.FormEvent) {
     e.preventDefault();
@@ -330,6 +370,34 @@ function FormulaireRappel({
       </div>
 
       {erreur && <p className="text-sm text-corail">{erreur}</p>}
+
+      <div className="border-t border-ligne pt-4">
+        <LabelChamp obligatoire={false}>
+          Envoyer un test à (une ou plusieurs adresses, séparées par une virgule)
+        </LabelChamp>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <input
+            value={emailsTest}
+            onChange={(e) => setEmailsTest(e.target.value)}
+            placeholder="toi@email.fr, collegue@email.fr"
+            className="min-w-[220px] flex-1 rounded-md border border-ligne bg-white px-3 py-2 text-sm text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
+          />
+          <button
+            type="button"
+            onClick={envoyerTest}
+            disabled={testEnCours || !sujet || !accroche || !emailsTest.trim()}
+            className="flex items-center gap-2 rounded-md border border-indigo px-4 py-2 text-sm font-medium text-indigo hover:bg-indigo/5 disabled:opacity-50"
+          >
+            <TestTube2 size={15} />
+            {testEnCours ? "Envoi…" : "Envoyer le test"}
+          </button>
+        </div>
+        {testResultat && (
+          <p className={`mt-2 text-sm ${testResultat.includes("envoyé") ? "text-vert" : "text-corail"}`}>
+            {testResultat}
+          </p>
+        )}
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button

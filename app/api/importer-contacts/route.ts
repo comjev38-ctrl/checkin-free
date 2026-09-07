@@ -4,9 +4,11 @@ import { NextResponse } from "next/server";
 type Contact = { prenom: string; nom: string; email: string };
 
 export async function POST(req: Request) {
-  const { eventId, contacts, envoyerEmail } = (await req.json()) as {
+  const { eventId, serieId, contacts, mode, envoyerEmail } = (await req.json()) as {
     eventId: string;
+    serieId?: string | null;
     contacts: Contact[];
+    mode: "inscrire" | "anciens_participants";
     envoyerEmail: boolean;
   };
 
@@ -16,6 +18,12 @@ export async function POST(req: Request) {
   if (contacts.length > 500) {
     return NextResponse.json(
       { message: "500 contacts maximum par import." },
+      { status: 400 }
+    );
+  }
+  if (mode === "anciens_participants" && !serieId) {
+    return NextResponse.json(
+      { message: "Cet événement ne fait pas partie d'une série récurrente." },
       { status: 400 }
     );
   }
@@ -33,6 +41,52 @@ export async function POST(req: Request) {
 
   const supabase = createServiceClient();
 
+  const resultat = {
+    importes: 0,
+    ignoresDoublons: 0,
+    ignoresInvalides: 0,
+    ignoresCapacite: 0,
+    emailsEnvoyes: 0,
+  };
+
+  // ---------- Mode "anciens participants" : pas de billet ----------
+  if (mode === "anciens_participants") {
+    for (const c of contacts) {
+      const email = (c.email ?? "").trim();
+      const prenom = (c.prenom ?? "").trim();
+      const nom = (c.nom ?? "").trim();
+
+      if (!email || !prenom || !nom || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        resultat.ignoresInvalides++;
+        continue;
+      }
+
+      const { data: existant } = await supabase
+        .from("anciens_contacts")
+        .select("id")
+        .eq("event_id", serieId)
+        .ilike("email", email)
+        .maybeSingle();
+
+      if (existant) {
+        resultat.ignoresDoublons++;
+        continue;
+      }
+
+      const { error } = await supabase
+        .from("anciens_contacts")
+        .insert({ event_id: serieId, prenom, nom, email });
+
+      if (error) {
+        resultat.ignoresInvalides++;
+        continue;
+      }
+      resultat.importes++;
+    }
+    return NextResponse.json(resultat);
+  }
+
+  // ---------- Mode "inscrire" : crée un vrai billet ----------
   const { data: event } = await supabase
     .from("events")
     .select("id, titre, capacite_max")
@@ -42,14 +96,6 @@ export async function POST(req: Request) {
   if (!event) {
     return NextResponse.json({ message: "Événement introuvable." }, { status: 404 });
   }
-
-  const resultat = {
-    importes: 0,
-    ignoresDoublons: 0,
-    ignoresInvalides: 0,
-    ignoresCapacite: 0,
-    emailsEnvoyes: 0,
-  };
 
   const idsCrees: string[] = [];
 

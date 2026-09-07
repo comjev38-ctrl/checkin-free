@@ -12,6 +12,7 @@ type Resultat = {
   ignoresInvalides: number;
   ignoresCapacite: number;
   emailsEnvoyes: number;
+  mode: "inscrire" | "anciens_participants";
 };
 
 function normaliser(texte: string) {
@@ -35,11 +36,18 @@ function detecterColonne(entetes: string[], cles: string[]) {
   return null;
 }
 
-export default function FormulaireImport({ eventId }: { eventId: string }) {
+export default function FormulaireImport({
+  eventId,
+  serieId,
+}: {
+  eventId: string;
+  serieId: string | null;
+}) {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [erreurLecture, setErreurLecture] = useState<string | null>(null);
   const [nomFichier, setNomFichier] = useState<string | null>(null);
+  const [mode, setMode] = useState<"inscrire" | "anciens_participants">("inscrire");
   const [envoyerEmail, setEnvoyerEmail] = useState(true);
   const [enCours, setEnCours] = useState(false);
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -97,7 +105,13 @@ export default function FormulaireImport({ eventId }: { eventId: string }) {
     const res = await fetch("/api/importer-contacts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventId, contacts, envoyerEmail }),
+      body: JSON.stringify({
+        eventId,
+        serieId,
+        contacts,
+        mode,
+        envoyerEmail: mode === "inscrire" ? envoyerEmail : false,
+      }),
     });
     const data = await res.json();
     setEnCours(false);
@@ -105,7 +119,7 @@ export default function FormulaireImport({ eventId }: { eventId: string }) {
       setErreurLecture(data.message ?? "Erreur lors de l'import.");
       return;
     }
-    setResultat(data);
+    setResultat({ ...data, mode });
     setContacts([]);
     router.refresh();
   }
@@ -118,11 +132,18 @@ export default function FormulaireImport({ eventId }: { eventId: string }) {
           <p className="font-semibold">Import terminé</p>
         </div>
         <ul className="mt-4 space-y-1.5 text-sm text-encre">
-          <li>✅ {resultat.importes} billet(s) créé(s)</li>
-          {envoyerEmail && <li>✉️ {resultat.emailsEnvoyes} email(s) envoyé(s)</li>}
+          <li>
+            ✅ {resultat.importes}{" "}
+            {resultat.mode === "inscrire"
+              ? "billet(s) créé(s)"
+              : "contact(s) ajouté(s) aux anciens participants"}
+          </li>
+          {resultat.mode === "inscrire" && envoyerEmail && (
+            <li>✉️ {resultat.emailsEnvoyes} email(s) envoyé(s)</li>
+          )}
           {resultat.ignoresDoublons > 0 && (
             <li className="text-sourdine">
-              ⏭️ {resultat.ignoresDoublons} ignoré(s) — déjà inscrit(s)
+              ⏭️ {resultat.ignoresDoublons} ignoré(s) — déjà présent(s)
             </li>
           )}
           {resultat.ignoresInvalides > 0 && (
@@ -152,6 +173,35 @@ export default function FormulaireImport({ eventId }: { eventId: string }) {
 
   return (
     <div className="mt-8">
+      <div className="mb-4 flex gap-1 rounded-md bg-ligne/50 p-1 text-sm">
+        <button
+          type="button"
+          onClick={() => setMode("inscrire")}
+          className={`flex-1 rounded px-3 py-2 ${
+            mode === "inscrire" ? "bg-white text-encre shadow-sm" : "text-sourdine"
+          }`}
+        >
+          Inscrire à cet événement
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("anciens_participants")}
+          disabled={!serieId}
+          className={`flex-1 rounded px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40 ${
+            mode === "anciens_participants" ? "bg-white text-encre shadow-sm" : "text-sourdine"
+          }`}
+        >
+          Ajouter aux anciens participants
+        </button>
+      </div>
+      <p className="mb-4 text-xs text-sourdine">
+        {mode === "inscrire"
+          ? "Un vrai billet est créé pour chaque contact, comme s'il s'était inscrit lui-même."
+          : serieId
+          ? "Aucun billet créé — ces contacts pourront simplement recevoir les rappels ciblant les anciens participants, pour être relancés sur une future séance."
+          : "Disponible uniquement pour un événement récurrent."}
+      </p>
+
       <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ligne bg-white px-6 py-10 text-center hover:border-indigo">
         <Upload size={24} className="text-sourdine" />
         <span className="text-sm font-medium text-encre">
@@ -199,15 +249,17 @@ export default function FormulaireImport({ eventId }: { eventId: string }) {
             </table>
           </div>
 
-          <label className="mt-4 flex items-center gap-2 text-sm text-encre">
-            <input
-              type="checkbox"
-              checked={envoyerEmail}
-              onChange={(e) => setEnvoyerEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-ligne text-indigo focus:ring-indigo"
-            />
-            Envoyer le billet par email à chaque personne importée
-          </label>
+          {mode === "inscrire" && (
+            <label className="mt-4 flex items-center gap-2 text-sm text-encre">
+              <input
+                type="checkbox"
+                checked={envoyerEmail}
+                onChange={(e) => setEnvoyerEmail(e.target.checked)}
+                className="h-4 w-4 rounded border-ligne text-indigo focus:ring-indigo"
+              />
+              Envoyer le billet par email à chaque personne importée
+            </label>
+          )}
 
           <button
             onClick={lancerImport}

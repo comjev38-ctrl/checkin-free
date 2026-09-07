@@ -130,6 +130,8 @@ export async function GET(req: Request) {
         (deja ?? []).map((t: { email: string }) => t.email.toLowerCase())
       );
 
+      const vus = new Map<string, { prenom: string | null; nom: string | null; email: string }>();
+
       if (idsAutresSeances.length > 0) {
         const { data: anciens } = await supabase
           .from("tickets")
@@ -138,13 +140,26 @@ export async function GET(req: Request) {
           .neq("statut", "annule")
           .not("email", "is", null);
 
-        const vus = new Map<string, { prenom: string | null; nom: string | null; email: string }>();
         for (const t of anciens ?? []) {
           const cle = t.email.toLowerCase();
           if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, t);
         }
-        destinataires = Array.from(vus.values());
       }
+
+      // Contacts ajoutés manuellement à la liste des anciens
+      // participants (import Excel/CSV en mode "anciens participants",
+      // sans billet créé).
+      const { data: contactsImportes } = await supabase
+        .from("anciens_contacts")
+        .select("prenom, nom, email")
+        .eq("event_id", idSerie);
+
+      for (const c of contactsImportes ?? []) {
+        const cle = c.email.toLowerCase();
+        if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, c);
+      }
+
+      destinataires = Array.from(vus.values());
     }
 
     if (destinataires.length === 0) {

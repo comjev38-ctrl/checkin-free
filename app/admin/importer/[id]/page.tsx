@@ -13,11 +13,16 @@ export default async function PageImporterContacts({
   const supabase = createClient();
   const { data: event } = await supabase
     .from("events")
-    .select("id, titre")
+    .select("id, titre, parent_event_id, recurrence")
     .eq("id", params.id)
     .single();
 
   if (!event) notFound();
+
+  // Les "anciens contacts" se rattachent toujours au MODÈLE d'une
+  // série récurrente (jamais à une séance précise) — null pour un
+  // événement ponctuel, qui n'a pas cette notion.
+  const serieId = event.parent_event_id ?? (event.recurrence === "hebdomadaire" ? event.id : null);
 
   return (
     <main className="px-6 py-10">
@@ -36,7 +41,7 @@ export default async function PageImporterContacts({
           intitulés sont détectés automatiquement).
         </p>
 
-        <FormulaireImport eventId={event.id} />
+        <FormulaireImport eventId={event.id} serieId={serieId} />
       </div>
     </main>
   );
