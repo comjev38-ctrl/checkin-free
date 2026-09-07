@@ -229,6 +229,12 @@ export default async function TableauDeBordAdmin() {
                               >
                                 Importer des contacts
                               </Link>
+                              <Link
+                                href={`/admin/rappels/${event.id}`}
+                                className="block px-4 py-2 text-sm text-encre hover:bg-ligne/20"
+                              >
+                                Rappels &amp; invitations
+                              </Link>
                             </>
                           )}
                           {recurrent && (

@@ -1,16 +1,25 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { dateISOCourteParis } from "@/lib/fuseau";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
+import { construireEmailRappel } from "@/lib/email-rappel";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
+function decalerJours(dateISO: string, jours: number): string {
+  const [a, m, j] = dateISO.split("-").map(Number);
+  const d = new Date(Date.UTC(a, m - 1, j));
+  d.setUTCDate(d.getUTCDate() + jours);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    d.getUTCDate()
+  ).padStart(2, "0")}`;
+}
+
 export async function GET(req: Request) {
   // Vercel envoie automatiquement ce header pour ses propres appels
   // planifiés si CRON_SECRET est configuré côté Vercel — ça évite
-  // que n'importe qui puisse déclencher l'envoi de rappels en
-  // devinant l'URL.
+  // que n'importe qui puisse déclencher l'envoi en devinant l'URL.
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const auth = req.headers.get("authorization");
@@ -24,11 +33,12 @@ export async function GET(req: Request) {
   }
 
   const supabase = createServiceClient();
+  const todayParis = dateISOCourteParis(new Date());
 
-  // La séance de la semaine d'un événement récurrent n'existe en
-  // base que si quelqu'un a visité sa page entre-temps (création à
-  // la volée). On la résout donc nous-mêmes ici, pour ne jamais
-  // rater un rappel faute de visite.
+  // La séance de la semaine d'un événement récurrent n'existe en base
+  // que si quelqu'un a visité sa page entre-temps (création à la
+  // volée). On la résout nous-mêmes ici pour ne jamais rater un envoi
+  // faute de visite.
   const { data: modeles } = await supabase
     .from("events")
     .select("*")
@@ -44,35 +54,107 @@ export async function GET(req: Request) {
     }
   }
 
-  const demain = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const demainISO = dateISOCourteParis(demain);
+  // Rappels actifs, avec l'événement concerné (une séance concrète,
+  // jamais un modèle abstrait — d'où le filtre sur date_debut IS NOT NULL
+  // qui exclut naturellement les lignes sans date réelle).
+  const { data: rappels } = await supabase
+    .from("rappels_planifies")
+    .select("*, event:events(*)")
+    .eq("actif", true);
 
-  const { data: evenements } = await supabase
-    .from("events")
-    .select("id, titre, slug, date_debut, heure_fin, lieu")
-    .eq("statut", "publie")
-    .eq("rappel_envoye", false);
-
-  const aRappeler = (evenements ?? []).filter(
-    (e: { date_debut: string }) => dateISOCourteParis(new Date(e.date_debut)) === demainISO
-  );
-
-  if (aRappeler.length === 0) {
-    return NextResponse.json({ envoyes: 0, evenements: 0 });
+  if (!rappels || rappels.length === 0) {
+    return NextResponse.json({ envoyes: 0, rappelsDeclenches: 0 });
   }
 
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   let totalEmails = 0;
+  let rappelsDeclenches = 0;
 
-  for (const event of aRappeler) {
-    const { data: tickets } = await supabase
-      .from("tickets")
-      .select("id, prenom, nom, email")
-      .eq("event_id", event.id)
-      .neq("statut", "annule")
-      .not("email", "is", null);
+  for (const rappel of rappels) {
+    let event: any = Array.isArray(rappel.event) ? rappel.event[0] : rappel.event;
+    if (!event) continue;
+
+    // Le rappel est rattaché au MODÈLE d'un événement récurrent (pas
+    // à la séance d'une semaine précise, qui change chaque semaine) —
+    // on résout donc la séance actuelle avant tout calcul, pour que
+    // ce même rappel continue de fonctionner semaine après semaine.
+    if (event.recurrence === "hebdomadaire" && !event.parent_event_id) {
+      if (event.statut !== "publie") continue;
+      try {
+        event = await obtenirOuCreerOccurrence(event);
+      } catch (err) {
+        console.error(`Résolution de séance échouée pour le rappel ${rappel.id} :`, err);
+        continue;
+      }
+    }
+
+    if (event.statut !== "publie") continue;
+
+    const dateEvenementParis = dateISOCourteParis(new Date(event.date_debut));
+    const dateCible = decalerJours(dateEvenementParis, -rappel.jours_avant);
+
+    if (dateCible !== todayParis) continue;
+    if (rappel.derniere_execution_paris === todayParis) continue; // déjà envoyé aujourd'hui
+
+    // ---------- Détermine les destinataires ----------
+    let destinataires: { prenom: string | null; nom: string | null; email: string }[] = [];
+
+    if (rappel.cible === "inscrits") {
+      const { data: tickets } = await supabase
+        .from("tickets")
+        .select("prenom, nom, email")
+        .eq("event_id", event.id)
+        .neq("statut", "annule")
+        .not("email", "is", null);
+      destinataires = tickets ?? [];
+    } else {
+      // anciens_participants : emails déjà vus sur une séance passée
+      // de la même série, mais pas encore inscrits à celle-ci.
+      const idSerie = event.parent_event_id ?? event.id;
+      const { data: seances } = await supabase
+        .from("events")
+        .select("id")
+        .or(`id.eq.${idSerie},parent_event_id.eq.${idSerie}`)
+        .neq("id", event.id);
+
+      const idsAutresSeances = (seances ?? []).map((s: { id: string }) => s.id);
+
+      const { data: deja } = await supabase
+        .from("tickets")
+        .select("email")
+        .eq("event_id", event.id)
+        .not("email", "is", null);
+      const emailsDejaInscrits = new Set(
+        (deja ?? []).map((t: { email: string }) => t.email.toLowerCase())
+      );
+
+      if (idsAutresSeances.length > 0) {
+        const { data: anciens } = await supabase
+          .from("tickets")
+          .select("prenom, nom, email")
+          .in("event_id", idsAutresSeances)
+          .neq("statut", "annule")
+          .not("email", "is", null);
+
+        const vus = new Map<string, { prenom: string | null; nom: string | null; email: string }>();
+        for (const t of anciens ?? []) {
+          const cle = t.email.toLowerCase();
+          if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, t);
+        }
+        destinataires = Array.from(vus.values());
+      }
+    }
+
+    if (destinataires.length === 0) {
+      await supabase
+        .from("rappels_planifies")
+        .update({ derniere_execution_paris: todayParis })
+        .eq("id", rappel.id);
+      rappelsDeclenches++;
+      continue;
+    }
 
     const dateAffichee = new Date(event.date_debut).toLocaleString("fr-FR", {
       timeZone: "Europe/Paris",
@@ -82,54 +164,64 @@ export async function GET(req: Request) {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const heureFinAffichee = event.heure_fin
-      ? event.heure_fin.slice(0, 5).replace(":", "h")
-      : null;
 
-    for (const ticket of tickets ?? []) {
-      if (!ticket.email) continue;
-      const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
-
+    for (const dest of destinataires) {
       try {
+        // Pour un rappel "inscrits", le lien d'annulation existe et
+        // pointe vers leur billet — pour une invitation à d'anciens
+        // participants, ils n'ont pas encore de billet ici, donc pas
+        // de lien d'annulation.
+        let urlAnnulation: string | null = null;
+        let lienBouton = rappel.lien_bouton || `${process.env.NEXT_PUBLIC_SITE_URL}/evenement/${event.slug}`;
+
+        if (rappel.cible === "inscrits") {
+          const { data: ticket } = await supabase
+            .from("tickets")
+            .select("id")
+            .eq("event_id", event.id)
+            .ilike("email", dest.email)
+            .neq("statut", "annule")
+            .maybeSingle();
+          if (ticket) {
+            const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
+            lienBouton = rappel.lien_bouton || urlBillet;
+            urlAnnulation = `${urlBillet}/annuler`;
+          }
+        }
+
+        const html = construireEmailRappel({
+          nomExpediteur: rappel.nom_expediteur,
+          logoUrl: event.logo_url,
+          titreEvenement: event.titre,
+          accroche: rappel.accroche,
+          description: rappel.description,
+          texteBouton: rappel.texte_bouton,
+          lienBouton,
+          couleurAccent: rappel.couleur_accent,
+          dateAffichee,
+          lieu: event.lieu,
+          prenom: dest.prenom,
+          urlAnnulation,
+        });
+
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-          to: ticket.email,
-          subject: `Rappel — ${event.titre} c'est demain`,
-          html: `
-            <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
-              <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
-                Rappel
-              </p>
-              <h1 style="font-size:20px; font-weight:700; color:#1E1B39; margin:4px 0 16px;">${event.titre}</h1>
-              <p style="color:#1E1B39;">
-                Bonjour ${[ticket.prenom, ticket.nom].filter(Boolean).join(" ")}, petit rappel :
-                c'est <strong>demain</strong> !
-              </p>
-              <p style="color:#1E1B39; text-transform:capitalize;">
-                ${dateAffichee}${heureFinAffichee ? ` – ${heureFinAffichee}` : ""}
-                ${event.lieu ? `<br>${event.lieu}` : ""}
-              </p>
-              <p style="margin-top:24px;">
-                <a href="${urlBillet}" style="display:inline-block; background:#5B5FEF; color:#ffffff; text-decoration:none; font-size:14px; font-weight:600; padding:12px 24px; border-radius:10px;">
-                  Voir mon billet
-                </a>
-              </p>
-              <p style="margin-top:20px; font-size:12px;">
-                <a href="${urlBillet}/annuler" style="color:#9CA3AF; text-decoration:underline;">
-                  Un empêchement ? Annuler ma place
-                </a>
-              </p>
-            </div>
-          `,
+          to: dest.email,
+          subject: rappel.sujet,
+          html,
         });
         totalEmails++;
       } catch (err) {
-        console.error(`Rappel non envoyé pour le billet ${ticket.id} :`, err);
+        console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
       }
     }
 
-    await supabase.from("events").update({ rappel_envoye: true }).eq("id", event.id);
+    await supabase
+      .from("rappels_planifies")
+      .update({ derniere_execution_paris: todayParis })
+      .eq("id", rappel.id);
+    rappelsDeclenches++;
   }
 
-  return NextResponse.json({ envoyes: totalEmails, evenements: aRappeler.length });
+  return NextResponse.json({ envoyes: totalEmails, rappelsDeclenches });
 }
