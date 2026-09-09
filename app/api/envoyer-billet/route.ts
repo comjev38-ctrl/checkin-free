@@ -1,6 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { genererQrDataUrl } from "@/lib/qrcode";
-import { Resend } from "resend";
+import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -9,11 +9,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "ticketId requis" }, { status: 400 });
   }
 
-  // Optionnel : si aucune clé Resend n'est configurée, on ne bloque
-  // pas l'inscription — la page de confirmation avec QR suffit.
-  if (!process.env.RESEND_API_KEY) {
+  // Optionnel : si aucun fournisseur d'email n'est configuré, on ne
+  // bloque pas l'inscription — la page de confirmation avec QR suffit.
+  if (!process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
     console.warn(
-      "RESEND_API_KEY absente sur Vercel : email de billet non envoyé (c'est probablement la cause si aucun email n'arrive)."
+      "Aucun fournisseur d'email configuré (RESEND_API_KEY / BREVO_API_KEY) sur Vercel : email de billet non envoyé."
     );
     return NextResponse.json({ skipped: true });
   }
@@ -31,19 +31,21 @@ export async function POST(req: Request) {
 
   const event: any = Array.isArray(ticket.event) ? ticket.event[0] : ticket.event;
   const nomComplet = [ticket.prenom, ticket.nom].filter(Boolean).join(" ");
+  // QR encodé directement en data-URI dans le HTML — pas de pièce
+  // jointe "cid:" (format spécifique à Resend, incompatible avec un
+  // secours vers un autre fournisseur). Une image en data-URI dans un
+  // <img> fonctionne pareil chez Resend, Brevo, ou n'importe qui
+  // d'autre, puisque ce n'est qu'un bout de HTML standard.
   const qrDataUrl = await genererQrDataUrl(ticket.code);
-  const qrBase64 = qrDataUrl.split(",")[1];
   const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const dateEvenement = new Date(event.date_debut).toLocaleString("fr-FR", {
     timeZone: "Europe/Paris",
     dateStyle: "full",
     timeStyle: "short",
   });
 
-  // Email en table HTML (pas de flexbox : compatibilité Outlook/Gmail),
-  // avec le QR intégré directement dans le corps du message via cid:.
+  // Email en table HTML (pas de flexbox : compatibilité Outlook/Gmail).
   const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8" /></head><body style="margin:0; padding:0;">
   <div style="background:#F6F5FC; padding:32px 16px; font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -82,7 +84,7 @@ export async function POST(req: Request) {
               </td>
               <td width="1" style="border-left:1px dashed #E7E4F5;"></td>
               <td width="140" style="padding:20px; text-align:center; vertical-align:middle;">
-                <img src="cid:qr-billet" width="100" height="100" alt="QR code" style="display:block; margin:0 auto;" />
+                <img src="${qrDataUrl}" width="100" height="100" alt="QR code" style="display:block; margin:0 auto;" />
                 <div style="margin-top:8px; font-size:10px; letter-spacing:1px; color:#1E1B39; word-break:break-all; font-family:monospace;">
                   ${ticket.code}
                 </div>
@@ -115,28 +117,15 @@ export async function POST(req: Request) {
 </body></html>
   `;
 
-  try {
-    const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-      to: ticket.email,
-      subject: `Ton billet — ${event.titre}`,
-      html,
-      attachments: [
-        {
-          filename: "billet.png",
-          content: qrBase64,
-          inlineContentId: "qr-billet",
-        },
-      ],
-    });
+  const { ok, erreur } = await envoyerEmailAvecSecours({
+    to: ticket.email,
+    subject: `Ton billet — ${event.titre}`,
+    html,
+  });
 
-    if (error) {
-      console.error("Resend a refusé l'envoi du billet :", error);
-      return NextResponse.json({ sent: false, erreur: error }, { status: 502 });
-    }
-  } catch (err) {
-    console.error("Exception lors de l'envoi du billet via Resend :", err);
-    return NextResponse.json({ sent: false }, { status: 500 });
+  if (!ok) {
+    console.error("Envoi du billet refusé par tous les fournisseurs configurés :", erreur);
+    return NextResponse.json({ sent: false, erreur }, { status: 502 });
   }
 
   return NextResponse.json({ sent: true });
