@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import LabelChamp from "@/components/label-champ";
+import EditeurRiche from "@/components/editeur-riche";
 import { Plus, Trash2, Pencil, Send, Mail, TestTube2, Users, History } from "lucide-react";
 
 type Rappel = {
@@ -321,6 +322,14 @@ function FormulaireRappel({
   async function enregistrer(e: React.FormEvent) {
     e.preventDefault();
     setErreur(null);
+
+    // L'éditeur enrichi (contentEditable) ne supporte pas l'attribut
+    // HTML natif "required" — on vérifie donc à la main.
+    if (!accroche || accroche.replace(/<[^>]*>/g, "").trim() === "") {
+      setErreur("Le message mis en avant est obligatoire.");
+      return;
+    }
+
     setEnCours(true);
 
     const supabase = createClient();
@@ -451,25 +460,26 @@ function FormulaireRappel({
 
       <div>
         <LabelChamp>Message mis en avant</LabelChamp>
-        <textarea
-          required
-          rows={2}
-          value={accroche}
-          onChange={(e) => setAccroche(e.target.value)}
-          placeholder="Nous serions ravis de te retrouver pour ce nouveau rendez-vous."
-          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
-        />
+        <div className="mt-1">
+          <EditeurRiche
+            value={accroche}
+            onChange={setAccroche}
+            placeholder="Nous serions ravis de te retrouver pour ce nouveau rendez-vous."
+            minHeight="130px"
+          />
+        </div>
       </div>
 
       <div>
         <LabelChamp obligatoire={false}>Description (optionnelle)</LabelChamp>
-        <textarea
-          rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Quelques lignes en plus pour donner envie de venir."
-          className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
-        />
+        <div className="mt-1">
+          <EditeurRiche
+            value={description}
+            onChange={setDescription}
+            placeholder="Quelques lignes en plus pour donner envie de venir."
+            minHeight="170px"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

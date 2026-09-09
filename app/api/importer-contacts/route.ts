@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       const prenom = (c.prenom ?? "").trim();
       const nom = (c.nom ?? "").trim();
 
-      if (!email || !prenom || !nom || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         resultat.ignoresInvalides++;
         continue;
       }
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
     const prenom = (c.prenom ?? "").trim();
     const nom = (c.nom ?? "").trim();
 
-    if (!email || !prenom || !nom || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       resultat.ignoresInvalides++;
       continue;
     }

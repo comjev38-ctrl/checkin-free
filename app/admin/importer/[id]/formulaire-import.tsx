@@ -77,20 +77,20 @@ export default function FormulaireImport({
       const colNom = detecterColonne(entetes, CLES_NOM);
       const colEmail = detecterColonne(entetes, CLES_EMAIL);
 
-      if (!colPrenom || !colNom || !colEmail) {
+      if (!colEmail) {
         setErreurLecture(
-          `Colonnes non reconnues. Trouvées : ${entetes.join(", ")}. Il faut au minimum une colonne Prénom, Nom et Email.`
+          `Colonne Email non reconnue. Colonnes trouvées : ${entetes.join(", ")}.`
         );
         return;
       }
 
       const extraits: Contact[] = lignes
         .map((ligne) => ({
-          prenom: String(ligne[colPrenom] ?? "").trim(),
-          nom: String(ligne[colNom] ?? "").trim(),
+          prenom: colPrenom ? String(ligne[colPrenom] ?? "").trim() : "",
+          nom: colNom ? String(ligne[colNom] ?? "").trim() : "",
           email: String(ligne[colEmail] ?? "").trim(),
         }))
-        .filter((c) => c.prenom || c.nom || c.email);
+        .filter((c) => c.email);
 
       setContacts(extraits);
     } catch (err) {

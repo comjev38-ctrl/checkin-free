@@ -13,6 +13,7 @@ export type ChampsEmailRappel = {
   lieu: string | null;
   prenom: string | null;
   urlAnnulation: string | null;
+  urlDesinscription?: string | null;
 };
 
 function hexVersHsl(hex: string): [number, number, number] {
@@ -211,6 +212,18 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
                 : ""
             }
 
+            ${
+              champs.urlDesinscription
+                ? `<tr>
+                    <td style="padding:6px 32px 4px; text-align:center;">
+                      <a href="${champs.urlDesinscription}" style="color:#C9BEB4; font-size:12px; text-decoration:underline;">
+                        Ne plus recevoir ces invitations
+                      </a>
+                    </td>
+                  </tr>`
+                : ""
+            }
+
             <tr>
               <td style="padding:22px 32px 30px;"></td>
             </tr>
@@ -219,7 +232,9 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
       </tr>
       <tr>
         <td style="padding:18px 8px; text-align:center;">
-          <span style="color:#C9BEB4; font-size:11px;">Envoyé avec 🧡 via CheckIn Free</span>
+          <span style="color:#C9BEB4; font-size:11px;">
+            Envoyé avec <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://checkinfree.com"}" style="color:#C9BEB4; text-decoration:underline;">CheckIn Free</a>
+          </span>
         </td>
       </tr>
     </table>

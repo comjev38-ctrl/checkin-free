@@ -61,12 +61,23 @@ async function determinerDestinataires(
     (deja ?? []).map((t: { email: string }) => t.email.toLowerCase())
   );
 
+  // Ceux qui se sont désabonnés de cette série ne doivent plus jamais
+  // réapparaître, quelle que soit la source (historique ou import).
+  const { data: desabonnes } = await supabase
+    .from("desabonnements_rappels")
+    .select("email")
+    .eq("event_id", idSerie);
+  const emailsDesabonnes = new Set(
+    (desabonnes ?? []).map((d: { email: string }) => d.email.toLowerCase())
+  );
+
   const vus = new Map<string, Destinataire>();
   let dejaInscritsExclus = 0;
   const dejaComptes = new Set<string>();
 
   function ajouter(t: { prenom?: string | null; nom?: string | null; email: string }) {
     const cle = t.email.toLowerCase();
+    if (emailsDesabonnes.has(cle)) return;
     if (emailsDejaInscrits.has(cle)) {
       if (!dejaComptes.has(cle)) {
         dejaComptes.add(cle);
