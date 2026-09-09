@@ -364,3 +364,78 @@ export async function renvoyerEchecsRappel(
 
   return { emailsEnvoyes: totalEmails, echecs: totalEchecs, aRetenter: aRetenter.length };
 }
+
+/**
+ * Envoie UNIQUEMENT aux destinataires actuels de la cible du rappel
+ * (inscrits ou anciens participants) qui n'ont JAMAIS été contactés
+ * pour ce rappel précis, ni avec succès ni en échec — utile après une
+ * correction qui élargit la liste des destinataires (ex: historique
+ * des billets ajouté après un premier envoi), pour rattraper
+ * uniquement les nouveaux venus sans redoubler personne.
+ */
+export async function envoyerAuxNouveauxRappel(
+  supabase: SupabaseClient,
+  rappelId: string,
+  declencheur: "planifie" | "manuel" = "manuel"
+): Promise<{ emailsEnvoyes: number; echecs: number; aContacter: number }> {
+  const { data: rappel } = await supabase
+    .from("rappels_planifies")
+    .select("*, event:events(*)")
+    .eq("id", rappelId)
+    .single();
+
+  if (!rappel) return { emailsEnvoyes: 0, echecs: 0, aContacter: 0 };
+
+  const eventBrut: any = Array.isArray(rappel.event) ? rappel.event[0] : rappel.event;
+  const event = await resoudreEvenementDuRappel(supabase, eventBrut);
+  if (!event) return { emailsEnvoyes: 0, echecs: 0, aContacter: 0 };
+
+  const { liste: destinatairesActuels } = await determinerDestinataires(supabase, rappel, event);
+
+  const { data: envois } = await supabase
+    .from("rappels_envois")
+    .select("destinataire_email")
+    .eq("rappel_id", rappelId);
+
+  const dejaContactes = new Set(
+    (envois ?? []).map((e: { destinataire_email: string }) => e.destinataire_email.toLowerCase())
+  );
+
+  const aContacter = destinatairesActuels.filter(
+    (d) => !dejaContactes.has(d.email.toLowerCase())
+  );
+
+  if (aContacter.length === 0) {
+    return { emailsEnvoyes: 0, echecs: 0, aContacter: 0 };
+  }
+
+  const dateAffichee = new Date(event.date_debut).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const sujetPropre = rappel.sujet.replace(/^\s*\[TEST\]\s*/i, "");
+
+  let totalEmails = 0;
+  let totalEchecs = 0;
+
+  for (const dest of aContacter) {
+    const ok = await envoyerUnDestinataire(
+      supabase,
+      rappel,
+      event,
+      dest,
+      declencheur,
+      sujetPropre,
+      dateAffichee
+    );
+    if (ok) totalEmails++;
+    else totalEchecs++;
+  }
+
+  return { emailsEnvoyes: totalEmails, echecs: totalEchecs, aContacter: aContacter.length };
+}

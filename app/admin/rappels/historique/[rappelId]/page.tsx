@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import RetourAdmin from "@/components/retour-admin";
 import { CheckCircle2, XCircle } from "lucide-react";
-import BoutonRenvoyerEchecs from "./bouton-renvoyer-echecs";
+import { BoutonRenvoyerEchecs, BoutonEnvoyerNouveaux } from "./bouton-renvoyer-echecs";
 
 export const revalidate = 0;
 
@@ -58,6 +58,7 @@ export default async function PageHistoriqueRappel({
             </div>
           )}
           {echecs > 0 && <BoutonRenvoyerEchecs rappelId={rappel.id} />}
+          <BoutonEnvoyerNouveaux rappelId={rappel.id} />
         </div>
 
         <div className="mt-6 divide-y divide-ligne rounded-lg border border-ligne bg-white">
