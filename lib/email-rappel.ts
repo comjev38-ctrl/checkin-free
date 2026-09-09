@@ -15,20 +15,61 @@ export type ChampsEmailRappel = {
   urlAnnulation: string | null;
 };
 
-/** Assombrit une couleur hex de manière approximative, pour le dégradé d'en-tête. */
-function assombrir(hex: string, facteur = 0.4): string {
+function hexVersHsl(hex: string): [number, number, number] {
   const m = hex.replace("#", "");
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
-  const f = (v: number) => Math.max(0, Math.round(v * (1 - facteur)));
-  return `#${f(r).toString(16).padStart(2, "0")}${f(g).toString(16).padStart(2, "0")}${f(b)
-    .toString(16)
-    .padStart(2, "0")}`;
+  const r = parseInt(m.slice(0, 2), 16) / 255;
+  const g = parseInt(m.slice(2, 4), 16) / 255;
+  const b = parseInt(m.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
+  let h = 0,
+    s = 0;
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return [h, s, l];
 }
 
-/** Éclaircit une couleur hex, pour un fond très pâle assorti (encart, cartes). */
-function eclaircir(hex: string, facteur = 0.93): string {
+function hslVersHex(h: number, s: number, l: number): string {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let [r, g, b] = [0, 0, 0];
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const f = (v: number) =>
+    Math.round((v + m) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${f(r)}${f(g)}${f(b)}`;
+}
+
+/** Deuxième teinte du dégradé chaleureux, dérivée de la couleur choisie. */
+function teinteComplementaireChaude(hex: string): string {
+  const [h, s, l] = hexVersHsl(hex);
+  const h2 = (h + 330) % 360; // rotation vers une teinte voisine, effet dégradé
+  return hslVersHex(h2, Math.min(1, s + 0.05), Math.min(0.72, l + 0.06));
+}
+
+function eclaircir(hex: string, facteur = 0.88): string {
   const m = hex.replace("#", "");
   const r = parseInt(m.slice(0, 2), 16);
   const g = parseInt(m.slice(2, 4), 16);
@@ -39,10 +80,18 @@ function eclaircir(hex: string, facteur = 0.93): string {
     .padStart(2, "0")}`;
 }
 
+function assombrirTexte(hex: string): string {
+  const [h, s] = hexVersHsl(hex);
+  return hslVersHex(h, Math.min(1, s + 0.15), 0.32);
+}
+
 export function construireEmailRappel(champs: ChampsEmailRappel): string {
-  const couleurFoncee = assombrir(champs.couleurAccent);
-  const couleurPale = eclaircir(champs.couleurAccent);
-  const salutation = champs.prenom ? `Bonjour ${champs.prenom},` : "Bonjour,";
+  const couleur2 = teinteComplementaireChaude(champs.couleurAccent);
+  const cartePale1 = eclaircir(champs.couleurAccent, 0.9);
+  const cartePale2 = eclaircir(couleur2, 0.9);
+  const texteCarte1 = assombrirTexte(champs.couleurAccent);
+  const texteCarte2 = assombrirTexte(couleur2);
+  const salutation = champs.prenom ? `Bonjour ${champs.prenom} 👋` : "Bonjour 👋";
   const urlMaps = champs.lieu
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(champs.lieu)}`
     : null;
@@ -54,39 +103,30 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body style="margin:0; padding:0;">
-  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#EEF1F5; padding:32px 16px;">
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding:36px 16px; background:radial-gradient(circle at 15% 0%, ${eclaircir(champs.couleurAccent, 0.94)} 0%, transparent 45%), radial-gradient(circle at 100% 20%, ${eclaircir(couleur2, 0.94)} 0%, transparent 45%), #FBFAF8;">
     <table role="presentation" width="100%" style="max-width:560px; margin:0 auto; border-collapse:collapse;">
       <tr>
-        <td style="background:#ffffff; border-radius:24px; overflow:hidden; box-shadow:0 2px 8px rgba(16,24,40,0.06), 0 12px 28px rgba(16,24,40,0.08);">
+        <td style="background:#ffffff; border-radius:32px; overflow:hidden; box-shadow:0 20px 40px ${champs.couleurAccent}22, 0 4px 12px rgba(16,24,40,0.06);">
 
-          <!-- En-tête -->
-          <table role="presentation" width="100%" style="border-collapse:collapse; background:linear-gradient(135deg, ${champs.couleurAccent} 0%, ${couleurFoncee} 100%);">
+          <!-- En-tête dégradé chaleureux -->
+          <table role="presentation" width="100%" style="border-collapse:collapse; background:linear-gradient(135deg, ${champs.couleurAccent} 0%, ${couleur2} 100%);">
             <tr>
-              <td style="padding:30px 28px;">
-                <table role="presentation" width="100%">
-                  <tr>
-                    ${
-                      champs.logoUrl
-                        ? `<td width="56" style="vertical-align:middle;">
-                            <table role="presentation"><tr><td style="background:#ffffff; border-radius:16px; padding:5px; line-height:0;">
-                              <img src="${champs.logoUrl}" alt="" width="44" height="44" style="display:block; border-radius:12px; object-fit:cover;" />
-                            </td></tr></table>
-                          </td>
-                          <td width="14"></td>`
-                        : ""
-                    }
-                    <td style="vertical-align:middle;">
-                      ${
-                        champs.nomExpediteur
-                          ? `<div style="color:rgba(255,255,255,0.75); font-size:11px; letter-spacing:0.6px; text-transform:uppercase; font-weight:600;">${champs.nomExpediteur}</div>`
-                          : ""
-                      }
-                      <div style="color:#ffffff; font-size:21px; font-weight:800; margin-top:3px; line-height:1.3;">
-                        ${champs.titreEvenement}
-                      </div>
-                    </td>
-                  </tr>
-                </table>
+              <td style="padding:38px 34px; text-align:center;">
+                ${
+                  champs.logoUrl
+                    ? `<table role="presentation" style="margin:0 auto;"><tr><td style="width:64px; height:64px; background:#ffffff; border-radius:22px; box-shadow:0 8px 16px rgba(0,0,0,0.12); text-align:center; vertical-align:middle; line-height:0;">
+                        <img src="${champs.logoUrl}" alt="" width="64" height="64" style="display:block; border-radius:22px; object-fit:cover;" />
+                      </td></tr></table>`
+                    : `<div style="width:64px; height:64px; margin:0 auto; background:#ffffff; border-radius:22px; text-align:center; line-height:64px; font-size:28px; box-shadow:0 8px 16px rgba(0,0,0,0.12);">🎉</div>`
+                }
+                ${
+                  champs.nomExpediteur
+                    ? `<div style="margin-top:14px; color:rgba(255,255,255,0.9); font-size:12px; letter-spacing:0.5px; text-transform:uppercase; font-weight:700;">${champs.nomExpediteur}</div>`
+                    : ""
+                }
+                <h1 style="margin:6px 0 0; font-size:22px; font-weight:800; color:#ffffff; line-height:1.35;">
+                  ${champs.titreEvenement}
+                </h1>
               </td>
             </tr>
           </table>
@@ -94,82 +134,63 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
           <!-- Corps -->
           <table role="presentation" width="100%" style="border-collapse:collapse;">
             <tr>
-              <td style="padding:30px 28px 10px; color:#1F2A37; font-size:15px; line-height:1.5;">
-                <p style="margin:0; font-weight:700; font-size:17px;">${salutation}</p>
+              <td style="padding:30px 32px 0; color:#3D2B1F; font-size:16px; line-height:1.6;">
+                <strong>${salutation}</strong><br>
+                ${champs.accroche}
               </td>
             </tr>
 
+            <!-- Cartes date / lieu, deux teintes issues du dégradé -->
             <tr>
-              <td style="padding:14px 28px 0;">
-                <table role="presentation" width="100%" style="border-collapse:collapse; background:${couleurPale}; border-radius:18px;">
+              <td style="padding:22px 32px 0;">
+                <table role="presentation" width="100%" style="border-collapse:collapse;">
                   <tr>
-                    <td style="padding:18px 20px; color:#1F2A37; font-size:15px; line-height:1.65; border-radius:18px;">
-                      ${champs.accroche}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- Bloc date -->
-            <tr>
-              <td style="padding:20px 28px 0;">
-                <table role="presentation" width="100%" style="border-collapse:collapse; background:#FAFBFC; border:1px solid #ECEFF3; border-radius:18px;">
-                  <tr>
-                    <td style="padding:16px 18px;">
-                      <div style="font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:${couleurFoncee};">
-                        🗓️&nbsp;&nbsp;Date et heure
-                      </div>
-                      <div style="margin-top:7px; font-size:15.5px; color:#1F2A37; text-transform:capitalize;">
-                        ${champs.dateAffichee}
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- Bloc lieu (bien espacé du bloc date, cliquable vers Maps) -->
-            ${
-              champs.lieu
-                ? `<tr>
-                    <td style="padding:14px 28px 0;">
-                      <table role="presentation" width="100%" style="border-collapse:collapse; background:#FAFBFC; border:1px solid #ECEFF3; border-radius:18px;">
-                        <tr>
-                          <td style="padding:16px 18px;">
-                            <div style="font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:${couleurFoncee};">
-                              📍&nbsp;&nbsp;Lieu
-                            </div>
-                            <div style="margin-top:7px; font-size:15.5px;">
-                              <a href="${urlMaps}" style="color:${champs.couleurAccent}; text-decoration:underline;">
-                                ${champs.lieu}
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
+                    <td width="50%" style="padding-right:5px; vertical-align:top;">
+                      <table role="presentation" width="100%" style="border-collapse:collapse; background:${cartePale1}; border-radius:20px;">
+                        <tr><td style="padding:16px; text-align:center;">
+                          <div style="font-size:22px; line-height:1;">📅</div>
+                          <div style="margin-top:8px; font-size:13px; font-weight:800; color:${texteCarte1}; text-transform:capitalize;">
+                            ${champs.dateAffichee}
+                          </div>
+                        </td></tr>
                       </table>
                     </td>
-                  </tr>`
-                : ""
-            }
+                    ${
+                      champs.lieu
+                        ? `<td width="50%" style="padding-left:5px; vertical-align:top;">
+                            <table role="presentation" width="100%" style="border-collapse:collapse; background:${cartePale2}; border-radius:20px;">
+                              <tr><td style="padding:16px; text-align:center;">
+                                <div style="font-size:22px; line-height:1;">📍</div>
+                                <div style="margin-top:8px; font-size:13px; font-weight:800;">
+                                  <a href="${urlMaps}" style="color:${texteCarte2}; text-decoration:none;">${champs.lieu}</a>
+                                </div>
+                              </td></tr>
+                            </table>
+                          </td>`
+                        : ""
+                    }
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
             ${
               champs.description
                 ? `<tr>
-                    <td style="padding:22px 28px 0; color:#1F2A37; font-size:15px; line-height:1.7;">
+                    <td style="padding:24px 32px 0; color:#6B5C50; font-size:14.5px; line-height:1.7; text-align:center;">
                       ${champs.description}
                     </td>
                   </tr>`
                 : ""
             }
 
-            <!-- Bouton d'action -->
+            <!-- Bouton pilule dégradé -->
             <tr>
-              <td style="padding:30px 28px 6px; text-align:center;">
+              <td style="padding:30px 32px 6px; text-align:center;">
                 <table role="presentation" style="margin:0 auto; border-collapse:collapse;">
                   <tr>
-                    <td style="background:${champs.couleurAccent}; border-radius:16px; box-shadow:0 6px 14px ${champs.couleurAccent}4D;">
-                      <a href="${champs.lienBouton}" style="display:inline-block; padding:15px 32px; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700; border-radius:16px;">
+                    <td style="background:linear-gradient(135deg, ${champs.couleurAccent}, ${couleur2}); border-radius:50px; box-shadow:0 10px 20px ${champs.couleurAccent}59;">
+                      <a href="${champs.lienBouton}" style="display:inline-block; padding:16px 40px; color:#ffffff; text-decoration:none; font-size:15px; font-weight:800; border-radius:50px;">
                         ${champs.texteBouton}
                       </a>
                     </td>
@@ -181,8 +202,8 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
             ${
               champs.urlAnnulation
                 ? `<tr>
-                    <td style="padding:18px 28px 4px; text-align:center;">
-                      <a href="${champs.urlAnnulation}" style="color:#9CA3AF; font-size:12px; text-decoration:underline;">
+                    <td style="padding:16px 32px 4px; text-align:center;">
+                      <a href="${champs.urlAnnulation}" style="color:#C9BEB4; font-size:12px; text-decoration:underline;">
                         Un empêchement ? Annuler ma place
                       </a>
                     </td>
@@ -191,23 +212,14 @@ export function construireEmailRappel(champs: ChampsEmailRappel): string {
             }
 
             <tr>
-              <td style="padding:24px 28px 28px;">
-                <div style="height:1px; background:#EEF1F5; border-radius:1px;"></div>
-              </td>
+              <td style="padding:22px 32px 30px;"></td>
             </tr>
           </table>
-
-          <!-- Pied de page -->
-          <table role="presentation" width="100%" style="border-collapse:collapse; background:${couleurFoncee};">
-            <tr>
-              <td style="padding:18px 28px; text-align:center;">
-                <div style="color:rgba(255,255,255,0.65); font-size:11px; letter-spacing:0.3px;">
-                  Envoyé via CheckIn Free — billetterie associative gratuite
-                </div>
-              </td>
-            </tr>
-          </table>
-
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:18px 8px; text-align:center;">
+          <span style="color:#C9BEB4; font-size:11px;">Envoyé avec 🧡 via CheckIn Free</span>
         </td>
       </tr>
     </table>

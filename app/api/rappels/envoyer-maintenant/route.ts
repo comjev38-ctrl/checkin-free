@@ -46,7 +46,8 @@ export async function POST(req: Request) {
     supabase,
     rappel,
     eventBrut,
-    todayParis
+    todayParis,
+    "manuel"
   );
 
   return NextResponse.json({ ok: true, emailsEnvoyes, destinataires });

@@ -98,7 +98,8 @@ export async function envoyerRappelMaintenant(
   supabase: SupabaseClient,
   rappel: any,
   eventBrut: any,
-  todayParis: string
+  todayParis: string,
+  declencheur: "planifie" | "manuel" = "planifie"
 ): Promise<{ emailsEnvoyes: number; destinataires: number }> {
   const event = await resoudreEvenementDuRappel(supabase, eventBrut);
   if (!event) return { emailsEnvoyes: 0, destinataires: 0 };
@@ -170,8 +171,24 @@ export async function envoyerRappelMaintenant(
         html,
       });
       totalEmails++;
+
+      await supabase.from("rappels_envois").insert({
+        rappel_id: rappel.id,
+        destinataire_email: dest.email,
+        destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
+        statut: "envoye",
+        declencheur,
+      });
     } catch (err) {
       console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
+      await supabase.from("rappels_envois").insert({
+        rappel_id: rappel.id,
+        destinataire_email: dest.email,
+        destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
+        statut: "echec",
+        declencheur,
+        erreur: err instanceof Error ? err.message : "Erreur inconnue",
+      });
     }
   }
 

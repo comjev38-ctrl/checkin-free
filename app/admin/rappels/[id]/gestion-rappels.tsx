@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import LabelChamp from "@/components/label-champ";
-import { Plus, Trash2, Pencil, Send, Mail, TestTube2, Users } from "lucide-react";
+import { Plus, Trash2, Pencil, Send, Mail, TestTube2, Users, History } from "lucide-react";
 
 type Rappel = {
   id: string;
@@ -140,6 +140,13 @@ export default function GestionRappels({
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <BoutonEnvoyerMaintenant rappelId={r.id} />
+                <Link
+                  href={`/admin/rappels/historique/${r.id}`}
+                  title="Historique d'envoi"
+                  className="rounded-md p-2 text-sourdine hover:bg-fond hover:text-encre"
+                >
+                  <History size={15} />
+                </Link>
                 <button
                   onClick={() => basculerActif(r)}
                   title={r.actif ? "Désactiver" : "Activer"}

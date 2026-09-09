@@ -103,7 +103,8 @@ export async function GET(req: Request) {
       supabase,
       rappel,
       eventBrut,
-      todayParis
+      todayParis,
+      "planifie"
     );
     totalEmails += emailsEnvoyes;
     rappelsDeclenches++;
