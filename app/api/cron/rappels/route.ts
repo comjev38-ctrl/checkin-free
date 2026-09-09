@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { dateISOCourteParis } from "@/lib/fuseau";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
-import { construireEmailRappel } from "@/lib/email-rappel";
+import { envoyerRappelMaintenant } from "@/lib/envoi-rappel";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 60;
@@ -54,187 +54,58 @@ export async function GET(req: Request) {
     }
   }
 
-  // Rappels actifs, avec l'événement concerné (une séance concrète,
-  // jamais un modèle abstrait — d'où le filtre sur date_debut IS NOT NULL
-  // qui exclut naturellement les lignes sans date réelle).
+  // Seuls les rappels en mode "planifié" sont concernés ici — les
+  // rappels en mode "manuel" ne partent jamais tout seuls, uniquement
+  // via le bouton "Envoyer maintenant".
   const { data: rappels } = await supabase
     .from("rappels_planifies")
     .select("*, event:events(*)")
-    .eq("actif", true);
+    .eq("actif", true)
+    .eq("mode_envoi", "planifie");
 
   if (!rappels || rappels.length === 0) {
     return NextResponse.json({ envoyes: 0, rappelsDeclenches: 0 });
   }
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
   let totalEmails = 0;
   let rappelsDeclenches = 0;
 
   for (const rappel of rappels) {
-    let event: any = Array.isArray(rappel.event) ? rappel.event[0] : rappel.event;
-    if (!event) continue;
+    const eventBrut: any = Array.isArray(rappel.event) ? rappel.event[0] : rappel.event;
+    if (!eventBrut) continue;
 
-    // Le rappel est rattaché au MODÈLE d'un événement récurrent (pas
-    // à la séance d'une semaine précise, qui change chaque semaine) —
-    // on résout donc la séance actuelle avant tout calcul, pour que
-    // ce même rappel continue de fonctionner semaine après semaine.
-    if (event.recurrence === "hebdomadaire" && !event.parent_event_id) {
-      if (event.statut !== "publie") continue;
+    // Pour savoir si "aujourd'hui" est le bon jour, il faut déjà
+    // connaître la vraie date de la séance concernée (pas celle,
+    // possiblement obsolète, du modèle récurrent) — donc un premier
+    // aperçu léger avant l'envoi effectif.
+    let dateReelle: string;
+    if (eventBrut.recurrence === "hebdomadaire" && !eventBrut.parent_event_id) {
+      if (eventBrut.statut !== "publie") continue;
       try {
-        event = await obtenirOuCreerOccurrence(event);
+        const seance = await obtenirOuCreerOccurrence(eventBrut);
+        dateReelle = seance.date_debut;
       } catch (err) {
         console.error(`Résolution de séance échouée pour le rappel ${rappel.id} :`, err);
         continue;
       }
+    } else {
+      if (eventBrut.statut !== "publie") continue;
+      dateReelle = eventBrut.date_debut;
     }
 
-    if (event.statut !== "publie") continue;
-
-    const dateEvenementParis = dateISOCourteParis(new Date(event.date_debut));
+    const dateEvenementParis = dateISOCourteParis(new Date(dateReelle));
     const dateCible = decalerJours(dateEvenementParis, -rappel.jours_avant);
 
     if (dateCible !== todayParis) continue;
     if (rappel.derniere_execution_paris === todayParis) continue; // déjà envoyé aujourd'hui
 
-    // ---------- Détermine les destinataires ----------
-    let destinataires: { prenom: string | null; nom: string | null; email: string }[] = [];
-
-    if (rappel.cible === "inscrits") {
-      const { data: tickets } = await supabase
-        .from("tickets")
-        .select("prenom, nom, email")
-        .eq("event_id", event.id)
-        .neq("statut", "annule")
-        .not("email", "is", null);
-      destinataires = tickets ?? [];
-    } else {
-      // anciens_participants : emails déjà vus sur une séance passée
-      // de la même série, mais pas encore inscrits à celle-ci.
-      const idSerie = event.parent_event_id ?? event.id;
-      const { data: seances } = await supabase
-        .from("events")
-        .select("id")
-        .or(`id.eq.${idSerie},parent_event_id.eq.${idSerie}`)
-        .neq("id", event.id);
-
-      const idsAutresSeances = (seances ?? []).map((s: { id: string }) => s.id);
-
-      const { data: deja } = await supabase
-        .from("tickets")
-        .select("email")
-        .eq("event_id", event.id)
-        .not("email", "is", null);
-      const emailsDejaInscrits = new Set(
-        (deja ?? []).map((t: { email: string }) => t.email.toLowerCase())
-      );
-
-      const vus = new Map<string, { prenom: string | null; nom: string | null; email: string }>();
-
-      if (idsAutresSeances.length > 0) {
-        const { data: anciens } = await supabase
-          .from("tickets")
-          .select("prenom, nom, email")
-          .in("event_id", idsAutresSeances)
-          .neq("statut", "annule")
-          .not("email", "is", null);
-
-        for (const t of anciens ?? []) {
-          const cle = t.email.toLowerCase();
-          if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, t);
-        }
-      }
-
-      // Contacts ajoutés manuellement à la liste des anciens
-      // participants (import Excel/CSV en mode "anciens participants",
-      // sans billet créé).
-      const { data: contactsImportes } = await supabase
-        .from("anciens_contacts")
-        .select("prenom, nom, email")
-        .eq("event_id", idSerie);
-
-      for (const c of contactsImportes ?? []) {
-        const cle = c.email.toLowerCase();
-        if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, c);
-      }
-
-      destinataires = Array.from(vus.values());
-    }
-
-    if (destinataires.length === 0) {
-      await supabase
-        .from("rappels_planifies")
-        .update({ derniere_execution_paris: todayParis })
-        .eq("id", rappel.id);
-      rappelsDeclenches++;
-      continue;
-    }
-
-    const dateAffichee = new Date(event.date_debut).toLocaleString("fr-FR", {
-      timeZone: "Europe/Paris",
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    for (const dest of destinataires) {
-      try {
-        // Pour un rappel "inscrits", le lien d'annulation existe et
-        // pointe vers leur billet — pour une invitation à d'anciens
-        // participants, ils n'ont pas encore de billet ici, donc pas
-        // de lien d'annulation.
-        let urlAnnulation: string | null = null;
-        let lienBouton = rappel.lien_bouton || `${process.env.NEXT_PUBLIC_SITE_URL}/evenement/${event.slug}`;
-
-        if (rappel.cible === "inscrits") {
-          const { data: ticket } = await supabase
-            .from("tickets")
-            .select("id")
-            .eq("event_id", event.id)
-            .ilike("email", dest.email)
-            .neq("statut", "annule")
-            .maybeSingle();
-          if (ticket) {
-            const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
-            lienBouton = rappel.lien_bouton || urlBillet;
-            urlAnnulation = `${urlBillet}/annuler`;
-          }
-        }
-
-        const html = construireEmailRappel({
-          nomExpediteur: rappel.nom_expediteur,
-          logoUrl: event.logo_url,
-          titreEvenement: event.titre,
-          accroche: rappel.accroche,
-          description: rappel.description,
-          texteBouton: rappel.texte_bouton,
-          lienBouton,
-          couleurAccent: rappel.couleur_accent,
-          dateAffichee,
-          lieu: event.lieu,
-          prenom: dest.prenom,
-          urlAnnulation,
-        });
-
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-          to: dest.email,
-          subject: rappel.sujet,
-          html,
-        });
-        totalEmails++;
-      } catch (err) {
-        console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
-      }
-    }
-
-    await supabase
-      .from("rappels_planifies")
-      .update({ derniere_execution_paris: todayParis })
-      .eq("id", rappel.id);
+    const { emailsEnvoyes } = await envoyerRappelMaintenant(
+      supabase,
+      rappel,
+      eventBrut,
+      todayParis
+    );
+    totalEmails += emailsEnvoyes;
     rappelsDeclenches++;
   }
 

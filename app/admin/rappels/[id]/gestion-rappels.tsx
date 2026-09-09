@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import LabelChamp from "@/components/label-champ";
-import { Plus, Trash2, Pencil, Send, Mail, TestTube2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Send, Mail, TestTube2, Users } from "lucide-react";
 
 type Rappel = {
   id: string;
@@ -12,6 +13,7 @@ type Rappel = {
   jours_avant: number;
   heure: string;
   cible: "inscrits" | "anciens_participants";
+  mode_envoi: "planifie" | "manuel";
   sujet: string;
   accroche: string;
   description: string | null;
@@ -84,13 +86,22 @@ export default function GestionRappels({
 
   return (
     <div className="mt-6">
-      <button
-        onClick={() => setEnEdition("nouveau")}
-        className="flex items-center gap-2 rounded-md bg-indigo px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo/90"
-      >
-        <Plus size={16} />
-        Ajouter un rappel
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setEnEdition("nouveau")}
+          className="flex items-center gap-2 rounded-md bg-indigo px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo/90"
+        >
+          <Plus size={16} />
+          Ajouter un rappel
+        </button>
+        <Link
+          href={`/admin/rappels/${eventId}/contacts`}
+          className="flex items-center gap-2 rounded-md border border-ligne px-4 py-2.5 text-sm font-medium text-encre hover:bg-fond"
+        >
+          <Users size={16} />
+          Voir contacts importés
+        </Link>
+      </div>
 
       <div className="mt-6 space-y-3">
         {rappels.length === 0 && (
@@ -107,16 +118,28 @@ export default function GestionRappels({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Mail size={14} className="text-indigo" />
                   <p className="font-medium text-encre">{r.sujet}</p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      r.mode_envoi === "manuel"
+                        ? "bg-ambre-clair text-ambre"
+                        : "bg-indigo/10 text-indigo"
+                    }`}
+                  >
+                    {r.mode_envoi === "manuel" ? "Manuel" : "Planifié"}
+                  </span>
                 </div>
                 <p className="mt-1 text-sm text-sourdine">
-                  {libelleJours(r.jours_avant)} à {r.heure.slice(0, 5)} ·{" "}
-                  {LIBELLE_CIBLE[r.cible]}
+                  {r.mode_envoi === "planifie"
+                    ? `${libelleJours(r.jours_avant)} à ${r.heure.slice(0, 5)}`
+                    : "Envoi uniquement à la demande"}{" "}
+                  · {LIBELLE_CIBLE[r.cible]}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                <BoutonEnvoyerMaintenant rappelId={r.id} />
                 <button
                   onClick={() => basculerActif(r)}
                   title={r.actif ? "Désactiver" : "Activer"}
@@ -147,6 +170,53 @@ export default function GestionRappels({
   );
 }
 
+function BoutonEnvoyerMaintenant({ rappelId }: { rappelId: string }) {
+  const [enCours, setEnCours] = useState(false);
+  const [resultat, setResultat] = useState<string | null>(null);
+
+  async function envoyer() {
+    if (
+      !window.confirm(
+        "Envoyer ce rappel maintenant, à tous ses destinataires actuels ?"
+      )
+    )
+      return;
+    setEnCours(true);
+    setResultat(null);
+    const res = await fetch("/api/rappels/envoyer-maintenant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rappelId }),
+    });
+    const data = await res.json();
+    setEnCours(false);
+    setResultat(
+      res.ok
+        ? `${data.emailsEnvoyes} email(s) envoyé(s)`
+        : data.message ?? "Échec de l'envoi"
+    );
+    setTimeout(() => setResultat(null), 4000);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={envoyer}
+        disabled={enCours}
+        title="Envoyer maintenant"
+        className="rounded-md p-2 text-sourdine hover:bg-indigo/10 hover:text-indigo disabled:opacity-50"
+      >
+        <Send size={15} />
+      </button>
+      {resultat && (
+        <span className="absolute right-0 top-9 z-10 whitespace-nowrap rounded-md bg-encre px-2.5 py-1.5 text-xs text-white shadow-lg">
+          {resultat}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function FormulaireRappel({
   eventId,
   rappel,
@@ -160,6 +230,9 @@ function FormulaireRappel({
   onAnnuler: () => void;
   onEnregistre: (r: Rappel, estNouveau: boolean) => void;
 }) {
+  const [modeEnvoi, setModeEnvoi] = useState<"planifie" | "manuel">(
+    rappel?.mode_envoi ?? "planifie"
+  );
   const [joursAvant, setJoursAvant] = useState(rappel?.jours_avant ?? 1);
   const [heure, setHeure] = useState(rappel?.heure?.slice(0, 5) ?? "09:00");
   const [cible, setCible] = useState<"inscrits" | "anciens_participants">(
@@ -228,6 +301,7 @@ function FormulaireRappel({
       jours_avant: joursAvant,
       heure,
       cible,
+      mode_envoi: modeEnvoi,
       sujet,
       accroche,
       description: description || null,
@@ -256,29 +330,62 @@ function FormulaireRappel({
 
   return (
     <form onSubmit={enregistrer} className="mt-6 space-y-5">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div>
-          <LabelChamp>Jours avant</LabelChamp>
-          <input
-            type="number"
-            min={0}
-            required
-            value={joursAvant}
-            onChange={(e) => setJoursAvant(Number(e.target.value))}
-            className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
-          />
+      <div>
+        <LabelChamp>Mode d&apos;envoi</LabelChamp>
+        <div className="mt-1 flex gap-1 rounded-md bg-ligne/50 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => setModeEnvoi("planifie")}
+            className={`flex-1 rounded px-3 py-2 ${
+              modeEnvoi === "planifie" ? "bg-white text-encre shadow-sm" : "text-sourdine"
+            }`}
+          >
+            Planifié (automatique)
+          </button>
+          <button
+            type="button"
+            onClick={() => setModeEnvoi("manuel")}
+            className={`flex-1 rounded px-3 py-2 ${
+              modeEnvoi === "manuel" ? "bg-white text-encre shadow-sm" : "text-sourdine"
+            }`}
+          >
+            Manuel (à la demande)
+          </button>
         </div>
-        <div>
-          <LabelChamp>Heure souhaitée</LabelChamp>
-          <input
-            type="time"
-            required
-            value={heure}
-            onChange={(e) => setHeure(e.target.value)}
-            className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
-          />
-        </div>
-        <div className="col-span-2 sm:col-span-1">
+        <p className="mt-1.5 text-xs text-sourdine">
+          {modeEnvoi === "planifie"
+            ? "Envoyé automatiquement par la tâche planifiée, au jour/heure ci-dessous."
+            : "N'est jamais envoyé automatiquement — seulement quand tu cliques sur \u00abEnvoyer maintenant\u00bb."}
+        </p>
+      </div>
+
+      <div className={`grid grid-cols-2 gap-4 ${modeEnvoi === "planifie" ? "sm:grid-cols-3" : ""}`}>
+        {modeEnvoi === "planifie" && (
+          <>
+            <div>
+              <LabelChamp>Jours avant</LabelChamp>
+              <input
+                type="number"
+                min={0}
+                required
+                value={joursAvant}
+                onChange={(e) => setJoursAvant(Number(e.target.value))}
+                className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
+              />
+            </div>
+            <div>
+              <LabelChamp>Heure souhaitée</LabelChamp>
+              <input
+                type="time"
+                required
+                value={heure}
+                onChange={(e) => setHeure(e.target.value)}
+                className="mt-1 w-full rounded-md border border-ligne bg-white px-3 py-2 text-encre outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/10"
+              />
+            </div>
+          </>
+        )}
+        <div className={modeEnvoi === "planifie" ? "col-span-2 sm:col-span-1" : "col-span-2"}>
           <LabelChamp>Cible</LabelChamp>
           <select
             value={cible}
