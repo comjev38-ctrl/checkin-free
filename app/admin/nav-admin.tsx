@@ -129,6 +129,9 @@ function NavAdminInterne({ nomAffiche, role }: { nomAffiche: string; role: strin
             <LogOut size={18} />
             Déconnexion
           </BoutonDeconnexion>
+          <p className="mt-2 px-3 text-[10px] text-sourdine/60">
+            Version du 09/09 · renvoi échecs
+          </p>
         </div>
       </aside>
     </>
