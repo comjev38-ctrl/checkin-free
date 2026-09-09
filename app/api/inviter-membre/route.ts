@@ -1,4 +1,5 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 import { NextResponse } from "next/server";
 
 function genererMotDePasseProvisoire() {
@@ -90,19 +91,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: erreurUpsert.message }, { status: 400 });
   }
 
-  // Envoi de l'email avec le mot de passe provisoire, via Resend
-  // (le même système que les billets) plutôt que le système d'email
-  // interne de Supabase — plus fiable, déjà éprouvé sur ce projet.
+  // Envoi de l'email avec le mot de passe provisoire, via le module
+  // partagé (Resend en premier, Brevo en secours si configuré).
   let emailEnvoye = false;
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      const { error } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <admin@resend.dev>",
-        to: email,
-        subject: "Ton accès à l'espace organisateur CheckIn Free",
-        html: `<!doctype html>
+  if (process.env.RESEND_API_KEY || process.env.BREVO_API_KEY) {
+    const { ok, erreur } = await envoyerEmailAvecSecours({
+      to: email,
+      subject: "Ton accès à l'espace organisateur CheckIn Free",
+      html: `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8" /></head><body style="margin:0; padding:0;">
           <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
             <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
@@ -120,14 +116,11 @@ export async function POST(req: Request) {
             </p>
           </div>
         </body></html>`,
-      });
-      emailEnvoye = !error;
-      if (error) console.error("Envoi email invitation — Resend a refusé :", error);
-    } catch (err) {
-      console.error("Envoi email invitation — exception :", err);
-    }
+    });
+    emailEnvoye = ok;
+    if (!ok) console.error("Envoi email invitation refusé :", erreur);
   } else {
-    console.warn("RESEND_API_KEY absente : email d'invitation non envoyé.");
+    console.warn("Aucun fournisseur d'email configuré : email d'invitation non envoyé.");
   }
 
   return NextResponse.json({

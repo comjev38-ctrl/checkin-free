@@ -2,6 +2,7 @@ import "server-only";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import { construireEmailRappel } from "@/lib/email-rappel";
+import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 
 type Destinataire = { prenom: string | null; nom: string | null; email: string };
 
@@ -116,7 +117,6 @@ async function determinerDestinataires(
  */
 async function envoyerUnDestinataire(
   supabase: SupabaseClient,
-  resend: any,
   rappel: any,
   event: any,
   dest: Destinataire,
@@ -159,19 +159,18 @@ async function envoyerUnDestinataire(
       urlAnnulation,
     });
 
-    // Important : Resend ne lève pas toujours une exception en cas de
-    // refus (email invalide, quota dépassé...), il renvoie un champ
-    // "error" dans sa réponse — sans cette vérification explicite, un
-    // envoi refusé pouvait être compté comme réussi.
-    const { error: erreurResend } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+    // Le module gère lui-même le repli sur Brevo si Resend échoue
+    // (quota dépassé, panne...). Il vérifie aussi explicitement le
+    // champ "error" de chaque réponse, qui n'est pas toujours signalé
+    // par une exception.
+    const { ok, erreur: erreurEnvoi, fournisseur } = await envoyerEmailAvecSecours({
       to: dest.email,
       subject: sujetPropre,
       html,
     });
 
-    if (erreurResend) {
-      throw new Error(erreurResend.message ?? "Resend a refusé l'envoi.");
+    if (!ok) {
+      throw new Error(erreurEnvoi ?? "Envoi refusé par tous les fournisseurs configurés.");
     }
 
     const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
@@ -248,9 +247,6 @@ export async function envoyerRappelMaintenant(
     minute: "2-digit",
   });
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
   // Filet de sécurité : si un sujet a un jour été enregistré avec un
   // préfixe "[TEST]" (par exemple tapé par erreur dans le formulaire),
   // on le retire ici avant tout envoi réel.
@@ -262,7 +258,6 @@ export async function envoyerRappelMaintenant(
   for (const dest of destinataires) {
     const ok = await envoyerUnDestinataire(
       supabase,
-      resend,
       rappel,
       event,
       dest,
@@ -348,8 +343,6 @@ export async function renvoyerEchecsRappel(
     minute: "2-digit",
   });
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const sujetPropre = rappel.sujet.replace(/^\s*\[TEST\]\s*/i, "");
 
   let totalEmails = 0;
@@ -358,7 +351,6 @@ export async function renvoyerEchecsRappel(
   for (const dest of aRetenter) {
     const ok = await envoyerUnDestinataire(
       supabase,
-      resend,
       rappel,
       event,
       dest,

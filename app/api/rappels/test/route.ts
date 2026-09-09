@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import { construireEmailRappel } from "@/lib/email-rappel";
+import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -13,9 +14,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Non authentifié." }, { status: 401 });
   }
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
     return NextResponse.json(
-      { message: "RESEND_API_KEY absente sur Vercel : impossible d'envoyer un test." },
+      { message: "Aucun fournisseur d'email configuré (RESEND_API_KEY ou BREVO_API_KEY) sur Vercel." },
       { status: 400 }
     );
   }
@@ -108,37 +109,28 @@ export async function POST(req: Request) {
     urlAnnulation: null,
   });
 
-  try {
-    const { Resend } = await import("resend");
-    const resend = new Resend(process.env.RESEND_API_KEY);
+  const echecs: string[] = [];
+  for (const email of emailsValides) {
+    const { ok, erreur } = await envoyerEmailAvecSecours({
+      to: email,
+      subject: `[TEST] ${sujet}`,
+      html,
+    });
+    if (!ok) {
+      console.error(`Envoi test rappel refusé pour ${email} :`, erreur);
+      echecs.push(email);
+    }
+  }
 
-    const echecs: string[] = [];
-    for (const email of emailsValides) {
-      const { error } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-        to: email,
-        subject: `[TEST] ${sujet}`,
-        html,
-      });
-      if (error) {
-        console.error(`Envoi test rappel — Resend a refusé pour ${email} :`, error);
-        echecs.push(email);
-      }
-    }
-
-    if (echecs.length === emailsValides.length) {
-      return NextResponse.json({ message: "Resend a refusé l'envoi." }, { status: 502 });
-    }
-    if (echecs.length > 0) {
-      return NextResponse.json({
-        ok: true,
-        envoyeA: emailsValides.filter((e) => !echecs.includes(e)).join(", "),
-        avertissement: `Échec pour : ${echecs.join(", ")}`,
-      });
-    }
-  } catch (err) {
-    console.error("Envoi test rappel — exception :", err);
-    return NextResponse.json({ message: "Erreur lors de l'envoi." }, { status: 500 });
+  if (echecs.length === emailsValides.length) {
+    return NextResponse.json({ message: "L'envoi a été refusé par tous les fournisseurs configurés." }, { status: 502 });
+  }
+  if (echecs.length > 0) {
+    return NextResponse.json({
+      ok: true,
+      envoyeA: emailsValides.filter((e) => !echecs.includes(e)).join(", "),
+      avertissement: `Échec pour : ${echecs.join(", ")}`,
+    });
   }
 
   return NextResponse.json({ ok: true, envoyeA: emailsValides.join(", ") });

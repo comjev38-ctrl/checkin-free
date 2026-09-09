@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -157,11 +158,7 @@ async function notifierAdmins(
   const destinataires = (admins ?? []).map((a: { email: string }) => a.email);
   if (destinataires.length === 0) return;
 
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+  await envoyerEmailAvecSecours({
     to: destinataires,
     subject: `Nouvelle inscription — ${titreEvenement}`,
     html: `<!doctype html>

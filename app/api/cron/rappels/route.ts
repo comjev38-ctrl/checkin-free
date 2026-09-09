@@ -28,8 +28,8 @@ export async function GET(req: Request) {
     }
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    return NextResponse.json({ envoyes: 0, message: "RESEND_API_KEY absente." });
+  if (!process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
+    return NextResponse.json({ envoyes: 0, message: "Aucun fournisseur d'email configuré (RESEND_API_KEY ou BREVO_API_KEY)." });
   }
 
   const supabase = createServiceClient();

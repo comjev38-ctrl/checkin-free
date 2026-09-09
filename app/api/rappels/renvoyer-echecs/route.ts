@@ -11,9 +11,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Non authentifié." }, { status: 401 });
   }
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) {
     return NextResponse.json(
-      { message: "RESEND_API_KEY absente sur Vercel." },
+      { message: "Aucun fournisseur d'email configuré (RESEND_API_KEY ou BREVO_API_KEY) sur Vercel." },
       { status: 400 }
     );
   }
