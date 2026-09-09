@@ -179,15 +179,11 @@ export default function GestionRappels({
 
 function BoutonEnvoyerMaintenant({ rappelId }: { rappelId: string }) {
   const [enCours, setEnCours] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
   const [resultat, setResultat] = useState<string | null>(null);
 
   async function envoyer() {
-    if (
-      !window.confirm(
-        "Envoyer ce rappel maintenant, à tous ses destinataires actuels ?"
-      )
-    )
-      return;
+    setConfirmation(false);
     setEnCours(true);
     setResultat(null);
     const res = await fetch("/api/rappels/envoyer-maintenant", {
@@ -197,18 +193,43 @@ function BoutonEnvoyerMaintenant({ rappelId }: { rappelId: string }) {
     });
     const data = await res.json();
     setEnCours(false);
-    setResultat(
-      res.ok
-        ? `${data.emailsEnvoyes} email(s) envoyé(s)`
-        : data.message ?? "Échec de l'envoi"
+
+    if (!res.ok) {
+      setResultat(data.message ?? "Échec de l'envoi");
+    } else {
+      const morceaux = [`${data.emailsEnvoyes} envoyé(s)`];
+      if (data.echecs > 0) morceaux.push(`${data.echecs} échec(s)`);
+      if (data.dejaInscritsExclus > 0)
+        morceaux.push(`${data.dejaInscritsExclus} déjà inscrit(s) exclu(s)`);
+      setResultat(morceaux.join(" · "));
+    }
+    setTimeout(() => setResultat(null), 6000);
+  }
+
+  if (confirmation) {
+    return (
+      <div className="flex items-center gap-1 rounded-md border border-indigo bg-indigo/5 px-2 py-1">
+        <span className="text-xs text-encre">Envoyer maintenant ?</span>
+        <button
+          onClick={envoyer}
+          className="rounded px-2 py-1 text-xs font-medium text-indigo hover:bg-indigo/10"
+        >
+          Oui
+        </button>
+        <button
+          onClick={() => setConfirmation(false)}
+          className="rounded px-2 py-1 text-xs text-sourdine hover:bg-fond"
+        >
+          Non
+        </button>
+      </div>
     );
-    setTimeout(() => setResultat(null), 4000);
   }
 
   return (
     <div className="relative">
       <button
-        onClick={envoyer}
+        onClick={() => setConfirmation(true)}
         disabled={enCours}
         title="Envoyer maintenant"
         className="rounded-md p-2 text-sourdine hover:bg-indigo/10 hover:text-indigo disabled:opacity-50"

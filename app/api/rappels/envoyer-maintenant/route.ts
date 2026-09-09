@@ -42,13 +42,8 @@ export async function POST(req: Request) {
   }
 
   const todayParis = dateISOCourteParis(new Date());
-  const { emailsEnvoyes, destinataires } = await envoyerRappelMaintenant(
-    supabase,
-    rappel,
-    eventBrut,
-    todayParis,
-    "manuel"
-  );
+  const { emailsEnvoyes, echecs, destinataires, dejaInscritsExclus } =
+    await envoyerRappelMaintenant(supabase, rappel, eventBrut, todayParis, "manuel");
 
-  return NextResponse.json({ ok: true, emailsEnvoyes, destinataires });
+  return NextResponse.json({ ok: true, emailsEnvoyes, echecs, destinataires, dejaInscritsExclus });
 }

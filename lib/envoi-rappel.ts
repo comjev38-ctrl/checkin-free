@@ -28,7 +28,7 @@ async function determinerDestinataires(
   supabase: SupabaseClient,
   rappel: any,
   event: any
-): Promise<Destinataire[]> {
+): Promise<{ liste: Destinataire[]; dejaInscritsExclus: number }> {
   if (rappel.cible === "inscrits") {
     const { data: tickets } = await supabase
       .from("tickets")
@@ -36,12 +36,13 @@ async function determinerDestinataires(
       .eq("event_id", event.id)
       .neq("statut", "annule")
       .not("email", "is", null);
-    return tickets ?? [];
+    return { liste: tickets ?? [], dejaInscritsExclus: 0 };
   }
 
   // anciens_participants : emails déjà vus sur une séance passée de
   // la même série, plus les contacts importés manuellement, moins
-  // ceux déjà inscrits à la séance actuelle.
+  // ceux déjà inscrits à la séance actuelle (volontaire : on ne
+  // relance pas quelqu'un déjà venu pour cette séance-ci).
   const idSerie = event.parent_event_id ?? event.id;
   const { data: seances } = await supabase
     .from("events")
@@ -61,6 +62,20 @@ async function determinerDestinataires(
   );
 
   const vus = new Map<string, Destinataire>();
+  let dejaInscritsExclus = 0;
+  const dejaComptes = new Set<string>();
+
+  function ajouter(t: { prenom?: string | null; nom?: string | null; email: string }) {
+    const cle = t.email.toLowerCase();
+    if (emailsDejaInscrits.has(cle)) {
+      if (!dejaComptes.has(cle)) {
+        dejaComptes.add(cle);
+        dejaInscritsExclus++;
+      }
+      return;
+    }
+    if (!vus.has(cle)) vus.set(cle, { prenom: t.prenom ?? null, nom: t.nom ?? null, email: t.email });
+  }
 
   if (idsAutresSeances.length > 0) {
     const { data: anciens } = await supabase
@@ -70,10 +85,7 @@ async function determinerDestinataires(
       .neq("statut", "annule")
       .not("email", "is", null);
 
-    for (const t of anciens ?? []) {
-      const cle = t.email.toLowerCase();
-      if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, t);
-    }
+    for (const t of anciens ?? []) ajouter(t);
   }
 
   const { data: contactsImportes } = await supabase
@@ -81,12 +93,9 @@ async function determinerDestinataires(
     .select("prenom, nom, email")
     .eq("event_id", idSerie);
 
-  for (const c of contactsImportes ?? []) {
-    const cle = c.email.toLowerCase();
-    if (!emailsDejaInscrits.has(cle) && !vus.has(cle)) vus.set(cle, c);
-  }
+  for (const c of contactsImportes ?? []) ajouter(c);
 
-  return Array.from(vus.values());
+  return { liste: Array.from(vus.values()), dejaInscritsExclus };
 }
 
 /**
@@ -100,18 +109,27 @@ export async function envoyerRappelMaintenant(
   eventBrut: any,
   todayParis: string,
   declencheur: "planifie" | "manuel" = "planifie"
-): Promise<{ emailsEnvoyes: number; destinataires: number }> {
+): Promise<{
+  emailsEnvoyes: number;
+  echecs: number;
+  destinataires: number;
+  dejaInscritsExclus: number;
+}> {
   const event = await resoudreEvenementDuRappel(supabase, eventBrut);
-  if (!event) return { emailsEnvoyes: 0, destinataires: 0 };
+  if (!event) return { emailsEnvoyes: 0, echecs: 0, destinataires: 0, dejaInscritsExclus: 0 };
 
-  const destinataires = await determinerDestinataires(supabase, rappel, event);
+  const { liste: destinataires, dejaInscritsExclus } = await determinerDestinataires(
+    supabase,
+    rappel,
+    event
+  );
 
   if (destinataires.length === 0) {
     await supabase
       .from("rappels_planifies")
       .update({ derniere_execution_paris: todayParis })
       .eq("id", rappel.id);
-    return { emailsEnvoyes: 0, destinataires: 0 };
+    return { emailsEnvoyes: 0, echecs: 0, destinataires: 0, dejaInscritsExclus };
   }
 
   const dateAffichee = new Date(event.date_debut).toLocaleString("fr-FR", {
@@ -127,6 +145,7 @@ export async function envoyerRappelMaintenant(
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   let totalEmails = 0;
+  let totalEchecs = 0;
 
   for (const dest of destinataires) {
     try {
@@ -164,24 +183,39 @@ export async function envoyerRappelMaintenant(
         urlAnnulation,
       });
 
-      await resend.emails.send({
+      // Important : Resend ne lève pas toujours une exception en cas
+      // de refus (email invalide, domaine non vérifié...), il renvoie
+      // un champ "error" dans sa réponse — sans cette vérification
+      // explicite, un envoi refusé pouvait être compté comme réussi.
+      const { error: erreurResend } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
         to: dest.email,
         subject: rappel.sujet,
         html,
       });
-      totalEmails++;
 
-      await supabase.from("rappels_envois").insert({
+      if (erreurResend) {
+        throw new Error(erreurResend.message ?? "Resend a refusé l'envoi.");
+      }
+
+      totalEmails++;
+      const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
         rappel_id: rappel.id,
         destinataire_email: dest.email,
         destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
         statut: "envoye",
         declencheur,
       });
+      if (erreurJournal) {
+        console.error(
+          `Email envoyé à ${dest.email} mais le suivi n'a pas pu être enregistré (la table rappels_envois existe-t-elle ? voir migration 16) :`,
+          erreurJournal
+        );
+      }
     } catch (err) {
+      totalEchecs++;
       console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
-      await supabase.from("rappels_envois").insert({
+      const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
         rappel_id: rappel.id,
         destinataire_email: dest.email,
         destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
@@ -189,6 +223,9 @@ export async function envoyerRappelMaintenant(
         declencheur,
         erreur: err instanceof Error ? err.message : "Erreur inconnue",
       });
+      if (erreurJournal) {
+        console.error("Échec ET impossible d'enregistrer le suivi de l'échec :", erreurJournal);
+      }
     }
   }
 
@@ -197,5 +234,10 @@ export async function envoyerRappelMaintenant(
     .update({ derniere_execution_paris: todayParis })
     .eq("id", rappel.id);
 
-  return { emailsEnvoyes: totalEmails, destinataires: destinataires.length };
+  return {
+    emailsEnvoyes: totalEmails,
+    echecs: totalEchecs,
+    destinataires: destinataires.length,
+    dejaInscritsExclus,
+  };
 }
