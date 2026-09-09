@@ -152,13 +152,13 @@ async function notifierAdmins(
   prenom: string,
   nom: string
 ) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!process.env.RESEND_API_KEY && !process.env.BREVO_API_KEY) return;
 
   const { data: admins } = await supabase.from("admins").select("email");
   const destinataires = (admins ?? []).map((a: { email: string }) => a.email);
   if (destinataires.length === 0) return;
 
-  await envoyerEmailAvecSecours({
+  const { ok, erreur } = await envoyerEmailAvecSecours({
     to: destinataires,
     subject: `Nouvelle inscription — ${titreEvenement}`,
     html: `<!doctype html>
@@ -172,4 +172,7 @@ async function notifierAdmins(
       </div>
     </body></html>`,
   });
+  if (!ok) {
+    console.error("Notification admin non envoyée (tous fournisseurs) :", erreur);
+  }
 }

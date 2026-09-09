@@ -51,7 +51,7 @@ export default async function PageInscrits({
           <p className="mt-1 text-sm capitalize text-sourdine">Semaine du {libelleDate}</p>
         )}
 
-        <TableauInscrits eventTitre={libelle} tickets={tickets ?? []} />
+        <TableauInscrits eventId={event.id} eventTitre={libelle} tickets={tickets ?? []} />
       </div>
     </main>
   );

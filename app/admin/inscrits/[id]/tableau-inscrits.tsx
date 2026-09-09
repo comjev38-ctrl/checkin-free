@@ -15,9 +15,11 @@ type Ticket = {
 };
 
 export default function TableauInscrits({
+  eventId,
   eventTitre,
   tickets: ticketsInitiaux,
 }: {
+  eventId: string;
   eventTitre: string;
   tickets: Ticket[];
 }) {
@@ -25,6 +27,29 @@ export default function TableauInscrits({
   const [filtre, setFiltre] = useState<"tous" | "arrives" | "pas_arrives">("tous");
   const [copieFaite, setCopieFaite] = useState(false);
   const [suppressionEnCours, setSuppressionEnCours] = useState<string | null>(null);
+  const [confirmationRenvoi, setConfirmationRenvoi] = useState(false);
+  const [renvoiEnCours, setRenvoiEnCours] = useState(false);
+  const [resultatRenvoi, setResultatRenvoi] = useState<string | null>(null);
+
+  async function renvoyerTousLesBillets() {
+    setConfirmationRenvoi(false);
+    setRenvoiEnCours(true);
+    setResultatRenvoi(null);
+    const res = await fetch("/api/renvoyer-tous-billets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId }),
+    });
+    const data = await res.json();
+    setRenvoiEnCours(false);
+    if (!res.ok) {
+      setResultatRenvoi(data.message ?? "Échec du renvoi.");
+      return;
+    }
+    setResultatRenvoi(
+      `${data.envoyes} billet(s) renvoyé(s) sur ${data.total}${data.echecs > 0 ? ` · ${data.echecs} échec(s)` : ""}`
+    );
+  }
 
   const billetsActifs = useMemo(
     () => tickets.filter((t) => t.statut !== "annule"),
@@ -226,8 +251,37 @@ export default function TableauInscrits({
           >
             Partager sur WhatsApp
           </button>
+
+          {confirmationRenvoi ? (
+            <div className="flex items-center gap-1 rounded-md border border-indigo bg-indigo/5 px-2 py-1">
+              <span className="text-xs text-encre">Renvoyer à tous ?</span>
+              <button
+                onClick={renvoyerTousLesBillets}
+                className="rounded px-2 py-1 text-xs font-medium text-indigo hover:bg-indigo/10"
+              >
+                Oui
+              </button>
+              <button
+                onClick={() => setConfirmationRenvoi(false)}
+                className="rounded px-2 py-1 text-xs text-sourdine hover:bg-fond"
+              >
+                Non
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmationRenvoi(true)}
+              disabled={billetsActifs.length === 0 || renvoiEnCours}
+              className="rounded-md border border-indigo bg-white px-3 py-2 text-xs uppercase text-indigo hover:bg-indigo/5 disabled:opacity-40"
+            >
+              {renvoiEnCours ? "Renvoi en cours…" : "Renvoyer tous les billets"}
+            </button>
+          )}
         </div>
       </div>
+      {resultatRenvoi && (
+        <p className="mt-2 text-sm text-sourdine">{resultatRenvoi}</p>
+      )}
 
       <div className="mt-4 overflow-x-auto rounded-lg border border-ligne bg-white">
         <table className="w-full text-sm">
