@@ -1,5 +1,4 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { genererQrDataUrl } from "@/lib/qrcode";
 import { envoyerEmailAvecSecours } from "@/lib/envoi-email";
 import { NextResponse } from "next/server";
 
@@ -31,13 +30,12 @@ export async function POST(req: Request) {
 
   const event: any = Array.isArray(ticket.event) ? ticket.event[0] : ticket.event;
   const nomComplet = [ticket.prenom, ticket.nom].filter(Boolean).join(" ");
-  // QR encodé directement en data-URI dans le HTML — pas de pièce
-  // jointe "cid:" (format spécifique à Resend, incompatible avec un
-  // secours vers un autre fournisseur). Une image en data-URI dans un
-  // <img> fonctionne pareil chez Resend, Brevo, ou n'importe qui
-  // d'autre, puisque ce n'est qu'un bout de HTML standard.
-  const qrDataUrl = await genererQrDataUrl(ticket.code);
   const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
+  // Une vraie URL d'image plutôt qu'une pièce jointe "cid:" (propre à
+  // Resend) ou une data-URI (bloquée par de nombreux clients mail,
+  // Outlook en tête) : c'est la seule méthode qui fonctionne à
+  // l'identique partout, Resend comme Brevo, Gmail comme Outlook.
+  const urlQr = `${process.env.NEXT_PUBLIC_SITE_URL}/api/qr/${ticket.id}`;
 
   const dateEvenement = new Date(event.date_debut).toLocaleString("fr-FR", {
     timeZone: "Europe/Paris",
@@ -84,7 +82,7 @@ export async function POST(req: Request) {
               </td>
               <td width="1" style="border-left:1px dashed #E7E4F5;"></td>
               <td width="140" style="padding:20px; text-align:center; vertical-align:middle;">
-                <img src="${qrDataUrl}" width="100" height="100" alt="QR code" style="display:block; margin:0 auto;" />
+                <img src="${urlQr}" width="100" height="100" alt="QR code" style="display:block; margin:0 auto;" />
                 <div style="margin-top:8px; font-size:10px; letter-spacing:1px; color:#1E1B39; word-break:break-all; font-family:monospace;">
                   ${ticket.code}
                 </div>
