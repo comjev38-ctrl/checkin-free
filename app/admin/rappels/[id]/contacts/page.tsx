@@ -34,18 +34,96 @@ export default async function PageContactsRappels({
     }
   }
 
-  const { data: anciensContacts } = await supabase
-    .from("anciens_contacts")
-    .select("*")
-    .eq("event_id", event.id)
-    .order("created_at", { ascending: false });
-
   const { data: inscrits } = await supabase
     .from("tickets")
     .select("id, prenom, nom, email, statut, created_at")
     .eq("event_id", seanceActuelle.id)
     .neq("statut", "annule")
     .order("created_at", { ascending: false });
+
+  const emailsDejaInscrits = new Set(
+    (inscrits ?? [])
+      .map((t) => t.email?.toLowerCase())
+      .filter((e): e is string => !!e)
+  );
+
+  // ---------- "Anciens participants" : deux sources combinées ----------
+  // 1) Contacts importés manuellement (table dédiée).
+  const { data: contactsImportes } = await supabase
+    .from("anciens_contacts")
+    .select("id, prenom, nom, email, created_at")
+    .eq("event_id", event.id)
+    .order("created_at", { ascending: false });
+
+  // 2) Historique réel des billets sur les séances passées de la
+  //    série — c'est cette source qui manquait sur cette page (elle
+  //    est bien utilisée à l'envoi, mais n'était jamais affichée ici).
+  const { data: autresSeances } = await supabase
+    .from("events")
+    .select("id")
+    .or(`id.eq.${event.id},parent_event_id.eq.${event.id}`)
+    .neq("id", seanceActuelle.id);
+
+  const idsAutresSeances = (autresSeances ?? []).map((s) => s.id);
+
+  let ticketsHistorique: { prenom: string | null; nom: string; email: string | null; created_at: string }[] = [];
+  if (idsAutresSeances.length > 0) {
+    const { data } = await supabase
+      .from("tickets")
+      .select("prenom, nom, email, created_at")
+      .in("event_id", idsAutresSeances)
+      .neq("statut", "annule")
+      .not("email", "is", null);
+    ticketsHistorique = data ?? [];
+  }
+
+  // Fusion des deux sources, dédupliquée par email, avec l'origine et
+  // le statut "déjà inscrit" affichés pour chaque personne.
+  type AncienParticipant = {
+    id: string;
+    prenom: string | null;
+    nom: string | null;
+    email: string;
+    created_at: string;
+    source: "import" | "historique";
+    dejaInscrit: boolean;
+  };
+
+  const fusionnes = new Map<string, AncienParticipant>();
+
+  for (const t of ticketsHistorique) {
+    if (!t.email) continue;
+    const cle = t.email.toLowerCase();
+    if (!fusionnes.has(cle)) {
+      fusionnes.set(cle, {
+        id: `hist-${cle}`,
+        prenom: t.prenom,
+        nom: t.nom,
+        email: t.email,
+        created_at: t.created_at,
+        source: "historique",
+        dejaInscrit: emailsDejaInscrits.has(cle),
+      });
+    }
+  }
+  for (const c of contactsImportes ?? []) {
+    const cle = c.email.toLowerCase();
+    if (!fusionnes.has(cle)) {
+      fusionnes.set(cle, {
+        id: c.id,
+        prenom: c.prenom,
+        nom: c.nom,
+        email: c.email,
+        created_at: c.created_at,
+        source: "import",
+        dejaInscrit: emailsDejaInscrits.has(cle),
+      });
+    }
+  }
+
+  const anciensParticipants = Array.from(fusionnes.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   return (
     <main className="px-6 py-10">
@@ -59,7 +137,7 @@ export default async function PageContactsRappels({
         </h1>
 
         <ListeContacts
-          anciensContacts={anciensContacts ?? []}
+          anciensParticipants={anciensParticipants}
           inscrits={inscrits ?? []}
         />
       </div>
