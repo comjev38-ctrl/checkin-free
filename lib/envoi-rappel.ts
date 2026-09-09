@@ -110,6 +110,102 @@ async function determinerDestinataires(
 }
 
 /**
+ * Envoie à UN SEUL destinataire et journalise le résultat (succès ou
+ * échec) dans rappels_envois. Fonction du bas niveau, réutilisée par
+ * l'envoi complet et par le renvoi ciblé aux échecs.
+ */
+async function envoyerUnDestinataire(
+  supabase: SupabaseClient,
+  resend: any,
+  rappel: any,
+  event: any,
+  dest: Destinataire,
+  declencheur: "planifie" | "manuel",
+  sujetPropre: string,
+  dateAffichee: string
+): Promise<boolean> {
+  try {
+    let urlAnnulation: string | null = null;
+    let lienBouton =
+      rappel.lien_bouton || `${process.env.NEXT_PUBLIC_SITE_URL}/evenement/${event.slug}`;
+
+    if (rappel.cible === "inscrits") {
+      const { data: ticket } = await supabase
+        .from("tickets")
+        .select("id")
+        .eq("event_id", event.id)
+        .ilike("email", dest.email)
+        .neq("statut", "annule")
+        .maybeSingle();
+      if (ticket) {
+        const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
+        lienBouton = rappel.lien_bouton || urlBillet;
+        urlAnnulation = `${urlBillet}/annuler`;
+      }
+    }
+
+    const html = construireEmailRappel({
+      nomExpediteur: rappel.nom_expediteur,
+      logoUrl: event.logo_url,
+      titreEvenement: event.titre,
+      accroche: rappel.accroche,
+      description: rappel.description,
+      texteBouton: rappel.texte_bouton,
+      lienBouton,
+      couleurAccent: rappel.couleur_accent,
+      dateAffichee,
+      lieu: event.lieu,
+      prenom: dest.prenom,
+      urlAnnulation,
+    });
+
+    // Important : Resend ne lève pas toujours une exception en cas de
+    // refus (email invalide, quota dépassé...), il renvoie un champ
+    // "error" dans sa réponse — sans cette vérification explicite, un
+    // envoi refusé pouvait être compté comme réussi.
+    const { error: erreurResend } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+      to: dest.email,
+      subject: sujetPropre,
+      html,
+    });
+
+    if (erreurResend) {
+      throw new Error(erreurResend.message ?? "Resend a refusé l'envoi.");
+    }
+
+    const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
+      rappel_id: rappel.id,
+      destinataire_email: dest.email,
+      destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
+      statut: "envoye",
+      declencheur,
+    });
+    if (erreurJournal) {
+      console.error(
+        `Email envoyé à ${dest.email} mais le suivi n'a pas pu être enregistré (la table rappels_envois existe-t-elle ? voir migration 16) :`,
+        erreurJournal
+      );
+    }
+    return true;
+  } catch (err) {
+    console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
+    const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
+      rappel_id: rappel.id,
+      destinataire_email: dest.email,
+      destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
+      statut: "echec",
+      declencheur,
+      erreur: err instanceof Error ? err.message : "Erreur inconnue",
+    });
+    if (erreurJournal) {
+      console.error("Échec ET impossible d'enregistrer le suivi de l'échec :", erreurJournal);
+    }
+    return false;
+  }
+}
+
+/**
  * Envoie effectivement un rappel/invitation à tous ses destinataires,
  * et marque la date d'exécution du jour (Europe/Paris) pour éviter un
  * double envoi si la tâche planifiée tourne aussi le même jour.
@@ -157,94 +253,25 @@ export async function envoyerRappelMaintenant(
 
   // Filet de sécurité : si un sujet a un jour été enregistré avec un
   // préfixe "[TEST]" (par exemple tapé par erreur dans le formulaire),
-  // on le retire ici avant tout envoi réel — qu'il soit automatique
-  // ou manuel, ce préfixe ne doit jamais apparaître pour un vrai
-  // destinataire.
+  // on le retire ici avant tout envoi réel.
   const sujetPropre = rappel.sujet.replace(/^\s*\[TEST\]\s*/i, "");
 
   let totalEmails = 0;
   let totalEchecs = 0;
 
   for (const dest of destinataires) {
-    try {
-      let urlAnnulation: string | null = null;
-      let lienBouton =
-        rappel.lien_bouton || `${process.env.NEXT_PUBLIC_SITE_URL}/evenement/${event.slug}`;
-
-      if (rappel.cible === "inscrits") {
-        const { data: ticket } = await supabase
-          .from("tickets")
-          .select("id")
-          .eq("event_id", event.id)
-          .ilike("email", dest.email)
-          .neq("statut", "annule")
-          .maybeSingle();
-        if (ticket) {
-          const urlBillet = `${process.env.NEXT_PUBLIC_SITE_URL}/billet/${ticket.id}`;
-          lienBouton = rappel.lien_bouton || urlBillet;
-          urlAnnulation = `${urlBillet}/annuler`;
-        }
-      }
-
-      const html = construireEmailRappel({
-        nomExpediteur: rappel.nom_expediteur,
-        logoUrl: event.logo_url,
-        titreEvenement: event.titre,
-        accroche: rappel.accroche,
-        description: rappel.description,
-        texteBouton: rappel.texte_bouton,
-        lienBouton,
-        couleurAccent: rappel.couleur_accent,
-        dateAffichee,
-        lieu: event.lieu,
-        prenom: dest.prenom,
-        urlAnnulation,
-      });
-
-      // Important : Resend ne lève pas toujours une exception en cas
-      // de refus (email invalide, domaine non vérifié...), il renvoie
-      // un champ "error" dans sa réponse — sans cette vérification
-      // explicite, un envoi refusé pouvait être compté comme réussi.
-      const { error: erreurResend } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-        to: dest.email,
-        subject: sujetPropre,
-        html,
-      });
-
-      if (erreurResend) {
-        throw new Error(erreurResend.message ?? "Resend a refusé l'envoi.");
-      }
-
-      totalEmails++;
-      const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
-        rappel_id: rappel.id,
-        destinataire_email: dest.email,
-        destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
-        statut: "envoye",
-        declencheur,
-      });
-      if (erreurJournal) {
-        console.error(
-          `Email envoyé à ${dest.email} mais le suivi n'a pas pu être enregistré (la table rappels_envois existe-t-elle ? voir migration 16) :`,
-          erreurJournal
-        );
-      }
-    } catch (err) {
-      totalEchecs++;
-      console.error(`Rappel ${rappel.id} non envoyé à ${dest.email} :`, err);
-      const { error: erreurJournal } = await supabase.from("rappels_envois").insert({
-        rappel_id: rappel.id,
-        destinataire_email: dest.email,
-        destinataire_nom: [dest.prenom, dest.nom].filter(Boolean).join(" ") || null,
-        statut: "echec",
-        declencheur,
-        erreur: err instanceof Error ? err.message : "Erreur inconnue",
-      });
-      if (erreurJournal) {
-        console.error("Échec ET impossible d'enregistrer le suivi de l'échec :", erreurJournal);
-      }
-    }
+    const ok = await envoyerUnDestinataire(
+      supabase,
+      resend,
+      rappel,
+      event,
+      dest,
+      declencheur,
+      sujetPropre,
+      dateAffichee
+    );
+    if (ok) totalEmails++;
+    else totalEchecs++;
   }
 
   await supabase
@@ -258,4 +285,90 @@ export async function envoyerRappelMaintenant(
     destinataires: destinataires.length,
     dejaInscritsExclus,
   };
+}
+
+/**
+ * Renvoie UNIQUEMENT aux destinataires dont la dernière tentative
+ * connue a échoué (et qui n'ont jamais reçu ce rappel avec succès) —
+ * pratique après un dépassement de quota Resend, sans redoubler les
+ * gens qui l'ont déjà bien reçu.
+ */
+export async function renvoyerEchecsRappel(
+  supabase: SupabaseClient,
+  rappelId: string,
+  declencheur: "planifie" | "manuel" = "manuel"
+): Promise<{ emailsEnvoyes: number; echecs: number; aRetenter: number }> {
+  const { data: rappel } = await supabase
+    .from("rappels_planifies")
+    .select("*, event:events(*)")
+    .eq("id", rappelId)
+    .single();
+
+  if (!rappel) return { emailsEnvoyes: 0, echecs: 0, aRetenter: 0 };
+
+  const eventBrut: any = Array.isArray(rappel.event) ? rappel.event[0] : rappel.event;
+  const event = await resoudreEvenementDuRappel(supabase, eventBrut);
+  if (!event) return { emailsEnvoyes: 0, echecs: 0, aRetenter: 0 };
+
+  const { data: envois } = await supabase
+    .from("rappels_envois")
+    .select("destinataire_email, destinataire_nom, statut")
+    .eq("rappel_id", rappelId);
+
+  const reussis = new Set<string>();
+  const echecs = new Map<string, { prenom: string | null; nom: string | null; email: string }>();
+
+  for (const e of envois ?? []) {
+    const cle = e.destinataire_email.toLowerCase();
+    if (e.statut === "envoye") reussis.add(cle);
+  }
+  for (const e of envois ?? []) {
+    const cle = e.destinataire_email.toLowerCase();
+    if (e.statut === "echec" && !reussis.has(cle) && !echecs.has(cle)) {
+      const morceaux = (e.destinataire_nom ?? "").split(" ");
+      echecs.set(cle, {
+        prenom: morceaux[0] || null,
+        nom: morceaux.slice(1).join(" ") || null,
+        email: e.destinataire_email,
+      });
+    }
+  }
+
+  const aRetenter = Array.from(echecs.values());
+  if (aRetenter.length === 0) {
+    return { emailsEnvoyes: 0, echecs: 0, aRetenter: 0 };
+  }
+
+  const dateAffichee = new Date(event.date_debut).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const sujetPropre = rappel.sujet.replace(/^\s*\[TEST\]\s*/i, "");
+
+  let totalEmails = 0;
+  let totalEchecs = 0;
+
+  for (const dest of aRetenter) {
+    const ok = await envoyerUnDestinataire(
+      supabase,
+      resend,
+      rappel,
+      event,
+      dest,
+      declencheur,
+      sujetPropre,
+      dateAffichee
+    );
+    if (ok) totalEmails++;
+    else totalEchecs++;
+  }
+
+  return { emailsEnvoyes: totalEmails, echecs: totalEchecs, aRetenter: aRetenter.length };
 }
