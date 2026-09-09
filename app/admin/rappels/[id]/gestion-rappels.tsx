@@ -330,7 +330,7 @@ function FormulaireRappel({
       heure,
       cible,
       mode_envoi: modeEnvoi,
-      sujet,
+      sujet: sujet.replace(/^\s*\[TEST\]\s*/i, ""),
       accroche,
       description: description || null,
       texte_bouton: texteBouton,
