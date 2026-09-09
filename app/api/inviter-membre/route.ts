@@ -102,7 +102,8 @@ export async function POST(req: Request) {
         from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <admin@resend.dev>",
         to: email,
         subject: "Ton accès à l'espace organisateur CheckIn Free",
-        html: `
+        html: `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8" /></head><body style="margin:0; padding:0;">
           <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
             <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
               Espace organisateur
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
               </a>
             </p>
           </div>
-        `,
+        </body></html>`,
       });
       emailEnvoye = !error;
       if (error) console.error("Envoi email invitation — Resend a refusé :", error);

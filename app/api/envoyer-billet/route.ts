@@ -44,7 +44,8 @@ export async function POST(req: Request) {
 
   // Email en table HTML (pas de flexbox : compatibilité Outlook/Gmail),
   // avec le QR intégré directement dans le corps du message via cid:.
-  const html = `
+  const html = `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8" /></head><body style="margin:0; padding:0;">
   <div style="background:#F6F5FC; padding:32px 16px; font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
     <table role="presentation" width="100%" style="max-width:480px; margin:0 auto; border-collapse:collapse;">
       <tr>
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
       </tr>
     </table>
   </div>
-
+</body></html>
   `;
 
   try {

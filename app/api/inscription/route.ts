@@ -164,7 +164,8 @@ async function notifierAdmins(
     from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
     to: destinataires,
     subject: `Nouvelle inscription — ${titreEvenement}`,
-    html: `
+    html: `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8" /></head><body style="margin:0; padding:0;">
       <div style="font-family: -apple-system,'Segoe UI',Helvetica,Arial,sans-serif; max-width: 480px; margin: auto;">
         <p style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:#5B5FEF; font-weight:700;">
           Nouvelle inscription
@@ -172,6 +173,6 @@ async function notifierAdmins(
         <h1 style="font-size:20px; font-weight:700; color:#1E1B39; margin:4px 0 16px;">${titreEvenement}</h1>
         <p style="color:#1E1B39;"><strong>${prenom} ${nom}</strong> vient de réserver sa place.</p>
       </div>
-    `,
+    </body></html>`,
   });
 }

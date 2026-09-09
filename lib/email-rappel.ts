@@ -16,7 +16,7 @@ export type ChampsEmailRappel = {
 };
 
 /** Assombrit une couleur hex de manière approximative, pour le dégradé d'en-tête. */
-function assombrir(hex: string, facteur = 0.35): string {
+function assombrir(hex: string, facteur = 0.4): string {
   const m = hex.replace("#", "");
   const r = parseInt(m.slice(0, 2), 16);
   const g = parseInt(m.slice(2, 4), 16);
@@ -27,79 +27,186 @@ function assombrir(hex: string, facteur = 0.35): string {
     .padStart(2, "0")}`;
 }
 
+/** Éclaircit une couleur hex, pour un fond très pâle assorti (encart, cartes). */
+function eclaircir(hex: string, facteur = 0.93): string {
+  const m = hex.replace("#", "");
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  const f = (v: number) => Math.round(v + (255 - v) * facteur);
+  return `#${f(r).toString(16).padStart(2, "0")}${f(g).toString(16).padStart(2, "0")}${f(b)
+    .toString(16)
+    .padStart(2, "0")}`;
+}
+
 export function construireEmailRappel(champs: ChampsEmailRappel): string {
   const couleurFoncee = assombrir(champs.couleurAccent);
+  const couleurPale = eclaircir(champs.couleurAccent);
   const salutation = champs.prenom ? `Bonjour ${champs.prenom},` : "Bonjour,";
 
-  return `
-  <div style="font-family: -apple-system,'Segoe UI',Arial,Helvetica,sans-serif; background:#F4F7F9; padding:24px 16px;">
-    <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 4px 14px rgba(16,24,40,0.08);">
-      <div style="background:linear-gradient(135deg, ${champs.couleurAccent} 0%, ${couleurFoncee} 100%); padding:22px;">
-        <table role="presentation" width="100%">
-          <tr>
+  return `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="margin:0; padding:0;">
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#EEF1F5; padding:32px 16px;">
+    <table role="presentation" width="100%" style="max-width:560px; margin:0 auto; border-collapse:collapse;">
+      <tr>
+        <td style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(16,24,40,0.06), 0 8px 24px rgba(16,24,40,0.06);">
+
+          <!-- En-tête -->
+          <table role="presentation" width="100%" style="border-collapse:collapse; background:linear-gradient(135deg, ${champs.couleurAccent} 0%, ${couleurFoncee} 100%);">
+            <tr>
+              <td style="padding:28px 26px;">
+                <table role="presentation" width="100%">
+                  <tr>
+                    ${
+                      champs.logoUrl
+                        ? `<td width="52" style="vertical-align:middle;">
+                            <table role="presentation"><tr><td style="background:#ffffff; border-radius:12px; padding:5px; line-height:0;">
+                              <img src="${champs.logoUrl}" alt="" width="42" height="42" style="display:block; border-radius:8px; object-fit:cover;" />
+                            </td></tr></table>
+                          </td>
+                          <td width="14"></td>`
+                        : ""
+                    }
+                    <td style="vertical-align:middle;">
+                      ${
+                        champs.nomExpediteur
+                          ? `<div style="color:rgba(255,255,255,0.75); font-size:11px; letter-spacing:0.6px; text-transform:uppercase; font-weight:600;">${champs.nomExpediteur}</div>`
+                          : ""
+                      }
+                      <div style="color:#ffffff; font-size:20px; font-weight:800; margin-top:3px; line-height:1.3;">
+                        ${champs.titreEvenement}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Corps -->
+          <table role="presentation" width="100%" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:28px 26px 8px; color:#1F2A37; font-size:15px; line-height:1.5;">
+                <p style="margin:0; font-weight:700; font-size:16px;">${salutation}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:14px 26px 0;">
+                <table role="presentation" width="100%" style="border-collapse:collapse; background:${couleurPale}; border-radius:12px;">
+                  <tr>
+                    <td style="padding:16px 18px; color:#1F2A37; font-size:15px; line-height:1.6; border-left:4px solid ${champs.couleurAccent}; border-radius:12px;">
+                      ${champs.accroche}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Bloc date -->
+            <tr>
+              <td style="padding:18px 26px 0;">
+                <table role="presentation" width="100%" style="border-collapse:collapse; background:#FAFBFC; border:1px solid #E5EAEF; border-radius:12px;">
+                  <tr>
+                    <td style="padding:14px 16px;">
+                      <div style="font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:${couleurFoncee};">
+                        🗓️&nbsp;&nbsp;Date et heure
+                      </div>
+                      <div style="margin-top:6px; font-size:15px; color:#1F2A37; text-transform:capitalize;">
+                        ${champs.dateAffichee}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Bloc lieu (espacé du bloc date, pas collé) -->
             ${
-              champs.logoUrl
-                ? `<td width="54" style="vertical-align:middle;">
-                    <img src="${champs.logoUrl}" alt="" width="46" height="46" style="border-radius:10px; background:#fff; padding:4px; display:block;" />
-                  </td>`
+              champs.lieu
+                ? `<tr>
+                    <td style="padding:12px 26px 0;">
+                      <table role="presentation" width="100%" style="border-collapse:collapse; background:#FAFBFC; border:1px solid #E5EAEF; border-radius:12px;">
+                        <tr>
+                          <td style="padding:14px 16px;">
+                            <div style="font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:${couleurFoncee};">
+                              📍&nbsp;&nbsp;Lieu
+                            </div>
+                            <div style="margin-top:6px; font-size:15px; color:#1F2A37;">
+                              ${champs.lieu}
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>`
                 : ""
             }
-            <td style="vertical-align:middle; padding-left:${champs.logoUrl ? "12" : "0"}px;">
-              ${
-                champs.nomExpediteur
-                  ? `<div style="color:rgba(255,255,255,0.85); font-size:12px; letter-spacing:0.4px;">${champs.nomExpediteur}</div>`
-                  : ""
-              }
-              <div style="color:#ffffff; font-size:19px; font-weight:800; margin-top:2px;">
-                ${champs.titreEvenement}
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
 
-      <div style="padding:22px; color:#1F2A37; line-height:1.7; font-size:15px;">
-        <p style="margin:0 0 14px; font-weight:700;">${salutation}</p>
+            ${
+              champs.description
+                ? `<tr>
+                    <td style="padding:20px 26px 0; color:#1F2A37; font-size:15px; line-height:1.65;">
+                      ${champs.description}
+                    </td>
+                  </tr>`
+                : ""
+            }
 
-        <div style="border-left:4px solid ${champs.couleurAccent}; background:#F7FBFC; padding:12px 14px; border-radius:10px; margin:0 0 16px;">
-          <p style="margin:0;">${champs.accroche}</p>
-        </div>
+            <!-- Bouton d'action -->
+            <tr>
+              <td style="padding:28px 26px 6px; text-align:center;">
+                <table role="presentation" style="margin:0 auto; border-collapse:collapse;">
+                  <tr>
+                    <td style="background:${champs.couleurAccent}; border-radius:10px; box-shadow:0 4px 10px ${champs.couleurAccent}55;">
+                      <a href="${champs.lienBouton}" style="display:inline-block; padding:14px 30px; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700;">
+                        ${champs.texteBouton}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-        <div style="display:grid; gap:8px; margin:0 0 16px;">
-          <div style="background:#F7FBFC; border:1px solid #E6EEF2; border-radius:10px; padding:10px 14px;">
-            <span style="font-weight:700; color:${couleurFoncee};">🗓️ Quand</span><br>
-            <span style="text-transform:capitalize;">${champs.dateAffichee}</span>
-          </div>
-          ${
-            champs.lieu
-              ? `<div style="background:#F7FBFC; border:1px solid #E6EEF2; border-radius:10px; padding:10px 14px;">
-                  <span style="font-weight:700; color:${couleurFoncee};">📍 Lieu</span><br>${champs.lieu}
-                </div>`
-              : ""
-          }
-        </div>
+            ${
+              champs.urlAnnulation
+                ? `<tr>
+                    <td style="padding:16px 26px 4px; text-align:center;">
+                      <a href="${champs.urlAnnulation}" style="color:#9CA3AF; font-size:12px; text-decoration:underline;">
+                        Un empêchement ? Annuler ma place
+                      </a>
+                    </td>
+                  </tr>`
+                : ""
+            }
 
-        ${champs.description ? `<p style="margin:0 0 18px;">${champs.description}</p>` : ""}
+            <tr>
+              <td style="padding:22px 26px 26px;">
+                <div style="height:1px; background:#EEF1F5;"></div>
+              </td>
+            </tr>
+          </table>
 
-        <div style="text-align:center; margin:22px 0 6px;">
-          <a href="${champs.lienBouton}" style="background:${champs.couleurAccent}; color:#ffffff; text-decoration:none; padding:13px 22px; border-radius:10px; font-weight:700; display:inline-block;">
-            ${champs.texteBouton}
-          </a>
-        </div>
+          <!-- Pied de page -->
+          <table role="presentation" width="100%" style="border-collapse:collapse; background:${couleurFoncee};">
+            <tr>
+              <td style="padding:16px 26px; text-align:center;">
+                <div style="color:rgba(255,255,255,0.65); font-size:11px; letter-spacing:0.3px;">
+                  Envoyé via CheckIn Free — billetterie associative gratuite
+                </div>
+              </td>
+            </tr>
+          </table>
 
-        ${
-          champs.urlAnnulation
-            ? `<p style="text-align:center; margin:16px 0 0; font-size:12px;">
-                <a href="${champs.urlAnnulation}" style="color:#9CA3AF; text-decoration:underline;">Un empêchement ? Annuler ma place</a>
-              </p>`
-            : ""
-        }
-      </div>
-
-      <div style="background:${couleurFoncee}; color:rgba(255,255,255,0.85); padding:12px 22px; font-size:11px;">
-        Envoyé via CheckIn Free.
-      </div>
-    </div>
+        </td>
+      </tr>
+    </table>
   </div>
-  `;
+</body>
+</html>`;
 }

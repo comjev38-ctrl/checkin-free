@@ -111,15 +111,30 @@ export async function POST(req: Request) {
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
-      to: emailsValides,
-      subject: `[TEST] ${sujet}`,
-      html,
-    });
-    if (error) {
-      console.error("Envoi test rappel — Resend a refusé :", error);
+
+    const echecs: string[] = [];
+    for (const email of emailsValides) {
+      const { error } = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL ?? "CheckIn Free <billets@resend.dev>",
+        to: email,
+        subject: `[TEST] ${sujet}`,
+        html,
+      });
+      if (error) {
+        console.error(`Envoi test rappel — Resend a refusé pour ${email} :`, error);
+        echecs.push(email);
+      }
+    }
+
+    if (echecs.length === emailsValides.length) {
       return NextResponse.json({ message: "Resend a refusé l'envoi." }, { status: 502 });
+    }
+    if (echecs.length > 0) {
+      return NextResponse.json({
+        ok: true,
+        envoyeA: emailsValides.filter((e) => !echecs.includes(e)).join(", "),
+        avertissement: `Échec pour : ${echecs.join(", ")}`,
+      });
     }
   } catch (err) {
     console.error("Envoi test rappel — exception :", err);

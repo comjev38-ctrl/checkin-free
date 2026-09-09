@@ -211,7 +211,9 @@ function FormulaireRappel({
     const data = await res.json();
     setTestEnCours(false);
     setTestResultat(
-      res.ok ? `Email de test envoyé à ${data.envoyeA}.` : data.message ?? "Échec de l'envoi."
+      res.ok
+        ? `Email de test envoyé à ${data.envoyeA}.${data.avertissement ? ` (${data.avertissement})` : ""}`
+        : data.message ?? "Échec de l'envoi."
     );
   }
 
