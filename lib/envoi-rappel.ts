@@ -126,6 +126,7 @@ async function envoyerUnDestinataire(
 ): Promise<boolean> {
   try {
     let urlAnnulation: string | null = null;
+    let urlDesinscription: string | null = null;
     let lienBouton =
       rappel.lien_bouton || `${process.env.NEXT_PUBLIC_SITE_URL}/evenement/${event.slug}`;
 
@@ -142,6 +143,15 @@ async function envoyerUnDestinataire(
         lienBouton = rappel.lien_bouton || urlBillet;
         urlAnnulation = `${urlBillet}/annuler`;
       }
+    } else {
+      // anciens_participants : pas de billet, donc pas de lien
+      // d'annulation — en revanche un vrai lien de désinscription est
+      // requis (voir politique de confidentialité), spécifique à la
+      // série d'événements concernée.
+      const idSerie = event.parent_event_id ?? event.id;
+      urlDesinscription = `${process.env.NEXT_PUBLIC_SITE_URL}/desabonnement?email=${encodeURIComponent(
+        dest.email
+      )}&serie=${idSerie}`;
     }
 
     const html = construireEmailRappel({
@@ -157,6 +167,7 @@ async function envoyerUnDestinataire(
       lieu: event.lieu,
       prenom: dest.prenom,
       urlAnnulation,
+      urlDesinscription,
     });
 
     // Le module gère lui-même le repli sur Brevo si Resend échoue

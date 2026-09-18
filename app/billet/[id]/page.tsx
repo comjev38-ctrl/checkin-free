@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { genererQrDataUrl } from "@/lib/qrcode";
 import EntetePublique from "@/components/entete-publique";
+import PiedDePage from "@/components/pied-de-page";
 import { CheckCircle2 } from "lucide-react";
 
 export const revalidate = 0;
@@ -124,6 +125,7 @@ export default async function PageBillet({
           )}
         </div>
       </div>
+      <PiedDePage />
     </main>
   );
 }

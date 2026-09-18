@@ -5,6 +5,7 @@ import Link from "next/link";
 import FormulaireInscription from "./formulaire-inscription";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import EntetePublique from "@/components/entete-publique";
+import PiedDePage from "@/components/pied-de-page";
 
 export const revalidate = 0;
 
@@ -162,10 +163,20 @@ export default async function PageEvenement({
               Cet événement est complet. Les inscriptions sont closes.
             </div>
           ) : (
-            <FormulaireInscription eventId={event.id} slug={params.slug} />
+            <>
+              <FormulaireInscription eventId={event.id} slug={params.slug} />
+              <p className="mt-3 text-center text-xs text-sourdine">
+                En t&apos;inscrivant, tu acceptes notre{" "}
+                <a href="/confidentialite" className="underline hover:text-encre">
+                  politique de confidentialité
+                </a>
+                .
+              </p>
+            </>
           )}
         </div>
       </div>
+      <PiedDePage />
     </main>
   );
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { calculerProchaineOccurrence } from "@/lib/recurrence";
 import { obtenirOuCreerOccurrence } from "@/lib/recurrence-serveur";
 import EntetePublique from "@/components/entete-publique";
+import PiedDePage from "@/components/pied-de-page";
 import NavAdmin from "@/app/admin/nav-admin";
 import { PartyPopper } from "lucide-react";
 
@@ -129,6 +130,7 @@ export default async function PageAccueil() {
           </>
         )}
       </section>
+      <PiedDePage />
     </main>
   );
 }
